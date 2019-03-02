@@ -1,0 +1,128 @@
+
+#footer-cont{
+    
+    padding-top: 20px;
+}
+#clickableAwesomeFont {
+     cursor: pointer
+}
+.like-btn{
+    color:#bdbfc1;
+    background:white;
+    border:none;
+    
+}
+.like-btn:hover{
+    background:#ccdfe5;
+    border:none;
+    
+}
+.like-btn-active{
+    color:#719ce2;
+}
+.share-btn{
+    background:white;
+    border:none;
+}
+.share-btn:hover{
+    background:#ccdfe5;
+    border:none;
+    
+}
+@import url(//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css);
+.view{
+    alignment-baseline: central;
+    font-size: smaller;
+    align-content: center;
+}
+.detailBox {
+    width:auto;
+    border:1px solid #bbb;
+    margin:0px;
+}
+.titleBox {
+    background-color:#fdfdfd;
+    padding:10px;
+}
+.titleBox label{
+  color:#444;
+  margin:0;
+  display:inline-block;
+}
+.comment{
+    width:200;
+}
+.commentBox {
+    padding:10px;
+    border-top:1px dotted #bbb;
+}
+.commentBox .form-group:first-child, .actionBox .form-group:first-child {
+    width:1000%;
+}
+.commentBox .form-group:nth-child(2), .actionBox .form-group:nth-child(2) {
+    width:100%;
+}
+.actionBox .form-group * {
+    width:100%;
+}
+.taskDescription {
+    margin-top:10px 0;
+}
+.commentList {
+    padding:0;
+    list-style:none;
+    max-height:200px;
+    overflow:auto;
+}
+.commentList li {
+    margin:0;
+    margin-top:10px;
+}
+.commentList li > div {
+    display:table-cell;
+}
+.commenterImage {
+    width:30px;
+    margin-right:5px;
+    height:100%;
+    float:left;
+}
+.commenterImage img {
+    width:100%;
+    border-radius:50%;
+}
+.commentText p {
+    margin:0;
+}
+.sub-text {
+    color:#aaa;
+    font-family:verdana;
+    font-size:11px;
+}
+.actionBox {
+    border-top:1px dotted #bbb;
+    padding:10px;
+}
+.geomap {
+  display: none;
+  position: absolute;
+  top: 0.3rem;
+  right: 0.5rem;
+  height: 4.1rem;
+  border-radius: 5px;
+  background: url("../img/default.png") repeat-x scroll left bottom / auto 100% rgb(250, 250, 250); 
+  border: 0.1rem solid rgb(166, 166, 166);
+  border-radius: 0.2rem 0.2rem 0.2rem 0.2rem; 
+  font-weight: 500;
+  font-size: 1.6rem;
+  line-height: 3.8rem;
+  color: rgb(51, 51, 51);
+  text-align: center;
+  text-shadow: 0.1rem 0.1rem 0px rgba(255, 255, 255, 0.3);
+  text-decoration: none;
+  outline: medium none;
+}
+.comment-text{
+    font-size: 13;
+    
+}
