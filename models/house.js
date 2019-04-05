@@ -4,29 +4,28 @@ var  passportLocalMongoose=require("passport-local-mongoose");
 var HouseSchema=new mongoose.Schema({
     name: {type:String,unique:false},
     details:String,
-    internet_connectivity:Boolean,
+    internet:Boolean,
     water:Boolean,
-    house_types:{
-            type:String,
-            enum:['Single-Room','Double Room','Bedsitter','1 Bedroom','2 Bedroom','3 bedroom']
-             },
-     house_rentcost:{
-            type:Number,
-            enum:['Single-Room','Double Room','Bedsitter','1 Bedroom','2 Bedsitter','3 bedroom']
-             },
-                 
-    rating:Number,
-    postedBy: String,
-    contact:[{
-        type:String
+    house_types:[
+        {
+            room_type:String,
+            room_cost:Number,
         }],
-    location:String,
-    coordinates:[{
-                type:String
-                 }],
-    likes:{type:Number,
-        default:0
-    },
+    rating:{ avg_rating:Number,
+             users_rated:Number,
+                default:{}
+          },
+    postedBy: String,
+    contact:{
+        phone:String,
+        mail:String
+        },
+    location:{ coordinates:{ 
+                lat: Number ,
+                long:Number
+               },
+               name:String
+               },
      comments:{type:Number,
         default:0
     },
@@ -45,9 +44,7 @@ HouseSchema.methods.toJSON = function() {
     image:this.image,
     rating:this.rating,
     body:this.body,
-    likes:{type:Number,
-        default:0
-    },
+    
     comments:{type:Number,
         default:0
     },

@@ -22,7 +22,8 @@ const socket                  =require("socket.io")
 const User                    = require("./models/user");
 const House               =require("./models/house");
 const Comment             =require("./models/comments");
-
+const Rating               =require("./models/rating");
+//const Comment             =require("./models/comments");
 //other routes
 const middleware = require("./middleware");
  
@@ -31,18 +32,23 @@ var   app              = express();
 var   server                = require('http').createServer(app);
 var   io                    = require("socket.io").listen(server);
 //io file
-//const  ioFile              = require('./socket.io/socket.io')(io);
-//router
+const  ioFile              = require('./socket.io/socket.io')(io);
 var indexRoutes               = require("./routes/index");
 var authRoutes                = require("./routes/auth");
+var reviewRoutes              =require("./routes/reviews");
+var conversationRoutes              =require("./routes/conversation");
+var reccomendRoutes           =require("./routes/recommend");
+
+var socketUsers = require('socket.io.users');
 // Make io accessible to our router
 app.use(function(req,res,next){
     req.io = io;
     next();
 });
-io.on('connection',(socket)=>{
-  console.log("Message")
-})
+var rootUsers = socketUsers.Users;
+// io.on('connection',(socket)=>{
+//   console.log(rootUsers)
+// })
 mongoose.set('useCreateIndex', true)
 mongoose.connect("mongodb://ken:ken1234@ds117545.mlab.com:17545/housing-app",{ useNewUrlParser: true });
 
@@ -83,7 +89,7 @@ passport.deserializeUser(function(user, done) {
 //Passport socket io configuration
 io.use(passportSocketIo.authorize({
   cookieParser: require('cookie-parser'),       // the same middleware you registrer in express
-  // key:          'express.sid',       // the name of the cookie where express/connect stores its session_id
+   key:          'express.sid',       // the name of the cookie where express/connect stores its session_id
   secret:       'house-recommender',    // the session_secret to parse the cookie
   store:        new MongoStore({url:"mongodb://ken:ken1234@ds117545.mlab.com:17545/housing-app"}),        // we NEED to use a sessionstore. no memorystore please
   success:      onAuthorizeSuccess,  // *optional* callback on success - read more below
@@ -126,6 +132,7 @@ app.use((req,res,next)=>{
     res.locals.currentDate = currentDate;
     res.locals.currentUser = req.user;
     res.locals.error = req.flash("error");
+    res.locals.house_errors = req.flash("house_errors");
     res.locals.success = req.flash("success");
     res.locals.route =req.originalUrl;
     res.locals.moment = moment;
@@ -143,8 +150,12 @@ app.use((req,res,next)=>{
 
 app.use(indexRoutes);
 app.use(authRoutes);
-
-
+app.use(reviewRoutes);
+app.use(conversationRoutes);
+app.use(reccomendRoutes)
+app.all('*', (req, res)=>{
+  res.redirect("/index");
+});
 server.listen(port, ()=>{
     console.log(`rent-house iS rUnNiNg On PoRt ${port} `);
 });

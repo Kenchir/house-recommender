@@ -3,7 +3,10 @@ var   router                 =express.Router();
 const User                 =require("../models/user");
 const House              =require("../models/house");
 
+const Rating                =require("../models/rating");
 
+const Comment              =require("../models/comments");
+const Viewed             =require("../models/houseviewed");
 var  passport               =require("passport");
 var moment                 = require("moment"); 
 var middleware             = require("../middleware");
@@ -24,20 +27,8 @@ const { sanitizeBody }      = require('express-validator/filter');
 const cryptoRandomString    = require('crypto-random-string');
 const multer                = require('multer');
 const cloudinary            = require('cloudinary');
+//const xoauth2            =require("xoauth2");
 
-var today = new Date();
-            var dd = today.getDate();
-            var mm = today.getMonth()+1; //January is 0!
-            var yyyy = today.getFullYear();
-            
-            if(dd<10) {
-                dd = '0'+dd
-            } 
-            
-            if(mm<10) {
-                mm = '0'+mm
-            } 
-            today = dd + '/' + mm + '/' + yyyy;
 //cloudinary config
 cloudinary.config({ 
     cloud_name: 'devteamke', 
@@ -45,37 +36,19 @@ cloudinary.config({
     api_secret: "ylF7sUCL0j1cb9rt0Khgk6inG_s"
   });
 
-//Mutler configuration move during refactoring
-// var storage = multer.diskStorage({
-//   filename: function(req, file, callback) {
-//     callback(null, Date.now() + file.originalname);
-//   },
-//   onError : function(err, next) {
-//   //   console.log('error', err);
-//       next(err);
-//     }
-// });
-// var fileFilter = function (req, file, cb) {
-//     // accept image files only
-//     if(req.originalUrl=='/profilepic_android'){
-//             if (!file.originalname.match(/\.(jpg|jpeg|png|gif|)$/i)) {
-//               req.fileValidationError ='Invalid file type';
-//                   cb(null, true);
-//             }
-//             cb(null, true);
-//     }else if(req.originalUrl=='/new_report_android'){
-//         if (!file.originalname.match(/\.(jpg|jpeg|png|gif|mp4|)$/i)) {
-//               req.fileValidationError ='Invalid file type';
-//                   cb(null, true);
-//           }
-         
-//             cb(null, true);
-//     }
-// };
-
-// var maxSize =1 * 1024 * 1024 *25
-// var upload = multer({ storage: storage,limits:{ fileSize: maxSize }, fileFilter: fileFilter, })
-
+var storage = multer.diskStorage({
+  filename: function(req, file, callback) {
+    callback(null, Date.now() + file.originalname);
+  }
+});
+var imageFilter = function (req, file, cb) {
+    // accept image files only
+    if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/i)) {
+        return cb(new Error('Only image files are allowed!'), false);
+    }
+    cb(null, true);
+};
+var upload = multer({ storage: storage, fileFilter: imageFilter})
 router.get("/login",(req,res)=>{
         res.render("login");
     })
@@ -85,9 +58,16 @@ router.get("/register",(req,res)=>{
 })
 router.post("/login", passport.authenticate("local",{  failureFlash :"Sorry, Wrong Credentials!",failureRedirect: "/login" }),function(req, res) {
       logger.infoLog.info(middleware.capitalize(req.user.username ) + " has just logged in " +  " at " + moment(moment().valueOf()).format('h:mm:a,  Do MMMM  YYYY,,') )
-     req.flash("success","Login successful!")
-     res.redirect(req.session.returnTo || '/');
-      delete req.session.returnTo;
+      if((req.user.role=='house-Owner')&&(req.user.isVerified==false)){
+          req.flash('error','Your Account has not been verified. Kindly Check your email  registration to verify your account.')
+          res.redirect('back');
+          delete req.session.returnTo;
+      }else{
+           req.flash("success","Login successful!")
+           res.redirect(req.session.returnTo || '/');
+            delete req.session.returnTo;
+      }
+    
     
 });
 router.get("/logout", function(req,res){
@@ -100,27 +80,16 @@ router.get("/logout", function(req,res){
             if(err){
               logger.errorLog.error(err);
             } else {
-                // Check for Geolocation API permissions
-                navigator.permissions.query({name:'geolocation'})
-                  .then(function(permissionStatus) {
-                    console.log('geolocation permission state is ', permissionStatus.state);
                 
-                    permissionStatus.onchange = function() {
-                      console.log('geolocation permission state has changed to ', this.state);
-                    };
-                  });
-                res.redirect("/");
+                res.redirect("/login");
             }
         });
     }else{
         req.flash('error','Your were not logged in');
-          res.redirect("/");
+          res.redirect("/login");
     }
    
 });
-router.get("/inbox",(req,res)=>{
-    res.render("inbox");
-})
 //register for authentication
 router.post("/register",async(req,res,next)=>{
     //console.log(req.body);
@@ -133,10 +102,11 @@ router.post("/register",async(req,res,next)=>{
              fname: req.body.fname,
              lname: req.body.lname,
              email: req.body.email,
-             title: req.body.title.value,
+             role: req.body.role,
              password:req.body.password,
           });
-          
+         //console.log(isValid.value.role)
+         
         if(isValid.error){
      // console.log(isValid.value.password)
       //Add response to invalid on client side
@@ -171,15 +141,17 @@ router.post("/register",async(req,res,next)=>{
                                             verifyToken:token,
                                             verifyExpires:Date.now()+3600000,
                                             lname:isValid.value.lname,
-                                            title:isValid.value.title,
-                                            email:isValid.value.email,
-                                            joinedAt:moment(moment().valueOf()),
+                                            role:isValid.value.role,
+                                            email:isValid.value.email
+                                           // joinedAt:moment(moment().valueOf()),
                                              }),isValid.value.password, (err,user)=>{
                                                  
                             if(err){
                                     req.flash("error",err.message);
                                     res.redirect("register");
                             }else{
+                             //   console.log(user)
+                                //return
                                 //req.flash("success","New admin has added successful.")
                                  //logger.infoLog.info(isValid.value.fname + " has requested for registration");
                                   //console.log(token);
@@ -190,349 +162,155 @@ router.post("/register",async(req,res,next)=>{
                                 //   },(err,notification)=>{
                                 //      req.io.sockets.to('masterRoom').emit('new-report/admin', user)
                                 //  })
-                             async.waterfall([
-                                 function(done){
-                                var smtpTransport = nodemailer.createTransport({
-                                    service:'Gmail',
-                                    auth:{
-                                        user:'webemailkip@gmail.com',
-                                        pass:'parcel1002017'
-                                    }
-                                });
-                                var mailOptions = {
-                                    to: isValid.value.email,
-                                    from:'webemailkip@gmail.com',
-                                    subject:'House community',
-                                    text:'Hello \b'+user.fname +'\b' +'\n\n' + 'Your request for admin registration has been received and pending for verification ' +'\n\n'+
-                                    'Welcome to StreetSweeperKE'
-                                    };
-                                    smtpTransport.sendMail(mailOptions, function(err,info){
-                                    //req.io.sockets.to('masterRoom').emit('new-admin', uname) 
-                                    
-                                    req.flash('success','Your registration was successful. Please,login');
-                                    res.redirect("/login");
-                                  // console.log(info);
-                                    done(err, 'done');
-                                    });
-                                }
-                                ], function(err){
-                                    if(err){ 
-                                        // return next();
-                                        console.log(err);
+                                if(user.role=='house-Owner'){
+                                        async.waterfall([
+                                             (done)=>{
+                                                var smtpTransport = nodemailer.createTransport({
+                                                           host: 'smtp.gmail.com',
+                                                                    port: 465,
+                                                                    secure: true,
+                                                                    auth: {
+                                                                        type: 'OAuth2',
+                                                                        user: 'kipkogeichirchir2@gmail.com',
+                                                                        clientId: '719159077041-lorf8m8a343e5lvorcb30grmuivj83gj.apps.googleusercontent.com',
+                                                                        clientSecret: 'amUTHetZ4xgJGU8TZotQYzId',
+                                                                        refreshToken: '1/ApjZeSbzzalpBvpqAcF4qUetTjZsDeI8qV2J9aEsXAI'
+                                                                     }
+                                                })
+                                            
+                                                var mailOptions = {
+                                                    to: isValid.value.email,
+                                                        from:'kipkogeichirchir2@gmail.com',
+                                                        subject:'House Recommender community',
+                                                        text:'Hello \b'+user.fname +'\b' +'\n\n' + 'Your request for house-Owner registration has been received. Kindly click the link below or paste it in browser for verification' +'\n\n'+
+                                                          'http://'+ req.headers.host +'/confirmaccount/'+ user.verifyToken +'\n\n'+
+                                                        'Welcome to House Recommender'
+                                                    };
+                                                    smtpTransport.sendMail(mailOptions,(err,info)=>{
+                                                        if(err){
+                                                            req.flash("error",err.message);
+                                                            res.redirect('back');
+                                                        }else{
+                                                            req.flash('success','Your registration was successful. A mail has been sent to your regi e-mail for verification ');
+                                                        res.redirect("/login");
+    
+                                                        }
+                                                    });
+                                            }
+                                            ],(err)=>{
+                                                    console.log(err);
+                                            }
+                                         )
+                                         
                                 }else{
-                                    
+                                            req.flash('success','Your registration was successful, You can now login');
+                                                res.redirect("/login");
                                 }
-                             });
+                                
+                            
                           }
                       });
                      }    
               });
     
 });
-router.get("/profile",(req,res)=>{
-    res.render("myprofile");
-})
-router.get("/profile/:id",async(req,res,next)=>{
-    res.render("/user_profile");
-})
-// router.get("/verifications",middleware.isLoggedIn,middleware.isMasterAdmin,(req,res)=>{
-//     User.find({'isActive':false,'isVerified':false,registeredBy:null},(err,Users)=>{
-//             res.render("verifications",{users:Users});
-//         });
-//     });
-// router.post("/verifications/:id",middleware.isLoggedIn,middleware.isMasterAdmin,(req,res)=>{
-//         if(req.body.choice==="Delete"){
-//          User.findByIdAndRemove(req.params.id,(err,user)=>{
-//           if(err){
-//               req.flash("error","Something went wrong");
-//               res.redirect("back");
-//           }else{
-            
-//               req.flash("success","Admin request rejected");
-//               res.redirect("panel");
-//             }
-//          });
-//         }
-       
-//         if(req.body.choice==="Activate"){
-//             Notify.Update({ref_id:req.params.id},{status:'read'});
-//         User.findByIdAndUpdate(req.params.id,{isActive:true,registeredBy:req.user.username,yearOfHire:today},{new:true},(err,user)=>{
-//              if(err){
-//               req.flash("error","Something went wrong");
-//               res.redirect("back");
-//           }else{
-//                     async.waterfall([
-//                                  function(done){
-//                                 var smtpTransport = nodemailer.createTransport({
-//                                     service:'Gmail',
-//                                     auth:{
-//                                         user:'webemailkip@gmail.com',
-//                                         pass:'parcel1002017'
-//                                     }
-//                                 });
-//                                 var mailOptions = {
-//                                     to: user.email,
-//                                     from:'webemailkip@gmail.com',
-//                                     subject:'StreetSweeperKE Account Confirmation',
-//                                     text:'Hello \b'+user.fname +'\b' +'\n\n' + 'You are receiving this mail  from jenga Citi that your request for admin has been received and accepted.'+ '\n'+ 'Click on the link to verify your account and login.USE USERNAME TO LOGIN ' +'\n\n'+
-//                                     'Click on the link or paste it into your browser to go on.' + '\n\n' +' Your Username:\b' +user.username  + '\b'+ '\n\n' +
-//                                   'http://'+ req.headers.host +'/confirmaccount/'+ user.verifyToken+'/activated' +'\n\n'+
-//                                     'Welcome to StreetSweeperKE'
-//                                     };
-//                                     smtpTransport.sendMail(mailOptions, function(err,info){
-                                     
-//                                     req.flash('success','Account successfully activated.');
-//                                     res.redirect("back");
-//                                   // console.log(info);
-//                                     done(err, 'done');
-//                                     });
-//                                 }
-//                                 ], function(err){
-//                                     if(err){ 
-//                                         return next();
-//                                 }else{
-                                    
-//                                 }
-//                              });
-//           }
-//         });
-//     }
-//     })
-//   // router.post("/verifications/:id/")
-// router.get("/add_admin",middleware.isLoggedIn,middleware.isMasterAdmin,(req,res)=>{
-//           // res.render("verifications",);
-//             res.render("add_admin");
-     
-// });
-// router.post("/add_admin", middleware.isMasterAdmin,(req, res)=> {
-//         console.log(req.body);
-//         var token=crypto.randomBytes(25).toString('hex');
-//          crypto.randomBytes(20,function(err,buf){
-//                  token = buf.toString('hex');
-//             });
-//         logger.infoLog.info("Admin registration request received from " + middleware.capitalize(req.user.username));
-//         //console.log(req.body);
-//         //console.log("A new admin " + middleware.capitalize(req.body.fname)  +" using email: " + req.body.email + " has requested registration" + " at " + moment(moment().valueOf()).format('h:mm:a,  Do MMMM  YYYY,'));
-//          var isValid = SignUp.validate({
-//              fname: req.body.fname,
-//              lname: req.body.lname,
-//              email: req.body.email,
-//           });
-//         if(isValid.error){
-//       // console.log(isValid.error)
-//       //Add response to invalid on client side
-//           req.flash("error",isValid.error.message);
-//           res.redirect("back");
-//           return;
-//          }
-         
-//             var password = "123";
-//             var uname=isValid.value.fname;
-//             var username=Lowercase(uname)+Math.floor(Math.random() * (+10 - +0)) + +1;
-//             var today = new Date();
-//             var dd = today.getDate();
-//             var mm = today.getMonth()+1; //January is 0!
-//             var yyyy = today.getFullYear();
-            
-//             if(dd<10) {
-//                 dd = '0'+dd
-//             } 
-            
-//             if(mm<10) {
-//                 mm = '0'+mm
-//             } 
-            
-//             today = dd + '/' + mm + '/' + yyyy;
-//                               //check if email does not exists      
-//          User.findOne({email:isValid.value.email}, (error, email)=> {
-//                      if(email){
-                         
-//                          req.flash("error"," The email you entered is already in use !");
-//                         res.redirect("add_admin");   
-//                      }else{
-                                            
-//                                                   User.register(new User({
-//                                                     username,
-//                                                     fname:isValid.value.fname,
-//                                                     verifyToken:token,
-//                                                     isActive:true,
-//                                                     verifyExpires:Date.now()+3600000,
-//                                                     lname:isValid.value.lname,
-//                                                     county:req.body.county,
-//                                                     email:isValid.value.email,
-//                                                     yearOfHire:today,
-//                                                   role:req.body.role,
-//                                                     authority:req.body.authority,
-//                                                     registeredBy:req.user.username
-//                                                     }),password, function(err,user){
-//                             if(err){
-//                                     req.flash("error",err.message);
-//                                     res.redirect("add_admin");
-//                             }else{
-//                                 //req.flash("success","New admin has added successful.")
-//                                  logger.infoLog.info(isValid.value.fname + " has been successfully registered ");
-//                                   //console.log(token);
-//                                 // console.log(user);
-//                                   logger.infoLog.info("Sending"+isValid.value.fname+" email for account completion setup  ");
-//                              async.waterfall([
-//                                  function(done){
-//                                 var smtpTransport = nodemailer.createTransport({
-//                                     service:'Gmail',
-//                                     auth:{
-//                                         user:'webemailkip@gmail.com',
-//                                         pass:'parcel1002017'
-//                                     }
-//                                 });
-//                                 var mailOptions = {
-//                                     to: isValid.value.email,
-//                                     from:'webemailkip@gmail.com',
-//                                     subject:'StreetSweeperKE Account Confirmation',
-//                                     text:'Hello \b'+user.fname +'\b' +'\n\n' + 'You are receiving this  from StreetSweeperKE mail that you have been added as an Admin. Complete by  setting up your password for the account' +'\n\n'+
-//                                     'Click on the link or paste it into your browser to go on.' + '\n\n' +' Your Username:\b' + username  + '\b'+ '\n\n' +
-//                                     'http://'+ req.headers.host +'/confirmaccount/'+ token + '\n\n'+
-//                                     'Welcome to StreetSweeperKE'
-//                                     };
-//                                     smtpTransport.sendMail(mailOptions, function(err,info){
-                                     
-//                                     req.flash('success','An email has been sent to '+ user.email + ' with further instructions to verify the account.');
-//                                     res.redirect("/add_admin");
-//                                   // console.log(info);
-//                                     done(err, 'done');
-//                                     });
-//                                 }
-//                                 ], function(err){
-//                                     if(err){ 
-//                                         return next();
-//                                 }else{
-                                    
-//                                 }
-//                              });
-//                           }
-//                       });
-//                      }    
-//               });
-//         });
- 
-// router.get("/confirmaccount/:token",function(req, res) {
-//         var token=req.params.token;
-//       // console.log(token);
-//       User.findOne({'verifyToken':token},(err,user)=>{
-//           if(user){
-//               if(!user.isActive){
-//                   req.flash('success','Account successfully verified. Login');
-//                   res.render("register",{user:user});
-//               }else{
-//                   req.flash('success','Kindly Set Up the Password and username of your choice');
-//                  res.render("register",{user:user});
-//               }
-//           }else
-//           {
-//                 logger.infoLog.info("A user has just tried to confirm account with an expired token");
-//                 req.flash('error','Confirm Account token is invalid or has expired');
-//                 res.redirect("/login");
-//           }
-//       })
-// });
-//  router.get("/confirmaccount/:token/activated",async(req,res)=>{
-           
-//                  User.findOne({'verifyToken':req.params.token},(err,user)=>{
-//                      if(user){
-//                         // console.log(user);
-//                         res.render("register",{user:user,req});
-//                       //  console.log(req.url);
-//                      }else{
-//                          req.flash("error","It seems you have confirmed your account.Login ")
-//                          res.redirect("/login")
-//                      }
-//                  });
-//      });
-// router.post("/confirmaccount/:token/activated",(req,res,next)=>{
-//     console.log(req.body);
-//           User.findOneAndUpdate({verifyToken:req.params.token},{isVerified:true,verifyToken:undefined,verifyExpires:undefined},{new:true},(err,user)=>{
-//           if(err){
-//               console.log(err);
-//               req.flash("error","Something went wrong");
-//               res.redirect("back");
-//           }else{
-//               req.flash("success","Your account has been verified, Login")
-//               res.redirect("/login");
-//           }
-//       })
 
-      
-// });     
-// router.post("/confirmaccount/:token", (req, res)=> {
+router.get("/profile",middleware.isLoggedIn,async(req,res)=>{
+                  var ratings,reviews,views;
+                  console.log(req.user._id)
+                  let promise=new Promise((resolve)=>{
+                         Rating.find({user_id:req.user._id},(err,result)=>{
+                                        ratings=result.length
+                                         resolve(ratings);
+                                      }
+                                    ) 
+                  })
+                    await promise 
+                    let promise0=new Promise((resolve)=>{
+                             Comment.find({user_id:req.user._id},(err,result)=>{
+                                 
+                                        reviews=result.length
+                                         resolve(reviews);
+                                      }
+                                    ) 
+                  })
+                    await promise0 
+                    let promise1=new Promise((resolve)=>{
+                            Viewed.find({user_id:req.user._id},(err,result)=>{
+                           //     console.log(result)
+                                        views=result[0].houses.length
+                                         resolve(views);
+                                      }
+                                    ) 
+                  
+                  })
+                    await promise1
+                    console.log('Views',views,'reviews',reviews,'ratings',ratings)
+        res.render("profile",{reviews:reviews,ratings:ratings,views:views});
+})
+
+router.post("/profile",middleware.isLoggedIn, upload.single('profilepic'),async(req,res)=>{
+  
+         let filePaths = req.file.path;
+     
+     let promise= new Promise((resolve)=>{
+           cloudinary.v2.uploader.upload(filePaths,(error, result) =>{
+        
+               resolve(result.secure_url)
+           });
+     })
+     let image= await promise;
+     console.log(image)
+  
+     User.findById(req.user._id)
+        .then((founduser)=>{
+            founduser.profilepic=image;
+            founduser.title=req.body.title;
+            founduser.marital=req.body.marital;
+            founduser.fname=req.body.fname;
+            founduser.lname=req.body.lname;
+            founduser.save((err,user)=>{
+                if(err){
+                    console.log(err)
+                }else{
+                    console.log(user)
+                }
+            });
+            console.log(founduser)
+            res.redirect('/index');
+        })
+        .catch((err)=>{
+            console.log(err)
+        })
     
-            
-//             async.waterfall([
-//         function(done){
-//                       User.findOne({verifyToken:req.params.token,verifyExpires:{ $gt:Date.now()} },function(err,user,next){
-//                             // console.log(user);
-//                             if(!user){
-//                                 //console.log(user);
-//                                 //console.log("token time has expired or invalid");
-//                                 //console.log(err);
-//                                  req.flash('error','Your verify account token is invalid or has expired.Please contact master admin');
-//                                  res.redirect("back");
-//                             }else if(user){
-//                               // console.log('code')
-//                             //console.log(req.body.password +" vs "+req.body.confirmPassword);
-//                                  if(req.body.password===req.body.confirmPassword){
-//                                   user.setPassword(req.body.password,function(err,user){
-//                                  user.isVerified=true;
-//                                  user.isActive=true;
-//                                  user.verifyToken=undefined;
-//                                  user.verifyExpires=undefined;
-//                                      user.save(function(){//saves the new details for the user to database
-//                                          req.logIn(user,function(err){
-//                                          req.flash('success','Password Succesfully set. Welcome');
-//                                             done(err,user);
-//                                          });
-                                    
-//                                     });
-//                                  });
-//                              }else{
-//                                  req.flash('error','Passwords does not match');
-//                                  res.redirect("/confirmaccount/"+ req.params.token);
-//                              }
-//                             //  console.log(req.user.email);
-                                
-//                          }
-                            
-//                      });
-//         },
-//          function( user, done){
-//             var smtpTransport = nodemailer.createTransport({
-//                 service:'Gmail',
-//                 auth:{
-//                     user:'webemailkip@gmail.com',
-//                     pass:'parcel1002017'
-                
-//                 }
-//             });
-//             var mailOptions = {
-//                 to: user.email,
-//                 from:'webemailkip@gmail.com',
-//                 subject:'Street Sweeper Account Confirmation',
-//                 html:"Hello \b" +user.username + "\bThis is a confirmation that the password for your streetSweepeer admin account " + user.email +" has been set and your account has been verified\n\n"
-//                         +"Welcome"
-//                 };
-//                 smtpTransport.sendMail(mailOptions, function(err){
-//                  logger.infoLog.info(middleware.capitalize( user.username) + "has changed their password");
-//                  req.flash('success','Your account has been verified.');
-//                  res.redirect("/panel");
-//                 done(err,'done');
-//                 });
-//         }
-//         ], function(err){
-//             if(err){ 
-//                 return next();
-                
-//             }
-             
-//         }
-// )
-//  });
+  
+})
+ 
+router.get("/confirmaccount/:token",function(req, res) {
+        var token=req.params.token;
+      // console.log(token);
+      User.findOne({'verifyToken':token},(err,user)=>{
+          if(user){
+              if(user.isVerified){
+                  req.flash('error','The account has been verified');
+                  res.render("login");
+              }else{
+                  user.isVerified=true;
+                //  user.verifyToken=undefined;
+                  user.save();
+                  req.flash('success','Your account email has been verified');
+                 res.redirect("/login");
+              }
+          }
+          else{
+                logger.infoLog.info("A user has just tried to confirm account with an expired token");
+                req.flash('error','Confirm Account token is invalid or has expired');
+                res.redirect("/login");
+          }
+      })
+});
+  
+
     
 //  router.post("/changepassword/:id", (req, res)=> {
 //             async.waterfall([
@@ -597,157 +375,217 @@ router.get("/profile/:id",async(req,res,next)=>{
 // )
 //  });
 
-//logout router
 
 
-// router.get("/resetPassword",function(req, res,err) {
-//         res.render("forgot_password");
-// });
-// router.post("/resetPassword",function(req,res){2
-//      async.waterfall([
-//         function(done){
-//             crypto.randomBytes(20,function(err,buf){
-//                 var token = buf.toString('hex');
-//                 done(err,token);
-//             });
+
+router.get("/resetPassword",function(req, res,err) {
+        res.render("forgotpass");
+});
+
+router.post("/resetPassword",function(req,res,next){
+    console.log(req.body)
+     async.waterfall([
+        function(done){
+            crypto.randomBytes(20,function(err,buf){
+                var token = buf.toString('hex');
+                done(err,token);
+            });
             
-//         },
-//         function(token, done){
+        },
+        function(token, done){
             
-//             if(req.body.email){
-//                 var email = req.body.email;
-//             }
-//             else{
-//                 var email = req.user.email;
-//             }
-//             User.findOne({email:email},function(err,user){
-//                 if(!user){
-//                   //  console.log(err + "No accont exists");
-//                  req.flash("error"," The email you entered does not belong to an account !");
-//                     return res.redirect('back');
-//                 }
-//                  user.resetPasswordToken = token;
-//                  user.resetPasswordExpires = Date.now()+3600000;//1hr
-//                  user.save(function(err){
-//                     done(err, token, user);
+            if(req.body.email){
+                var email = req.body.email;
+            }else{
+                 req.flash("error"," You have not entered a valid email");
+                     res.redirect('back');
+            }
+           
+            User.findOne({email:email},function(err,user){
+                if(!user){
+                  //  console.log(err + "No accont exists");
+                 req.flash("error"," The email you entered does not belong to an account !");
+                    res.redirect('back');
+                }else{
                     
-//                 });
-//             });
-//         },
-//         function(token, user, done){
-//             var smtpTransport = nodemailer.createTransport({
-//                 service:'Gmail',
-//                 auth:{
-//                     user:'webemailkip@gmail.com',
-//                     pass:'parcel1002017'
+                         user.resetPasswordToken = token;
+                         user.resetPasswordExpires = Date.now()+3600000;//1hr
+                         user.save(function(err){
+                            done(err, token, user);
+                    
+                });
+                }
+              
+            });
+        },
+        function(token, user, done){
+            var smtpTransport = nodemailer.createTransport({
+                 host: 'smtp.gmail.com',
+                                                                port: 465,
+                                                                secure: true,
+                                                                auth: {
+                                                                    type: 'OAuth2',
+                                                                    user: 'kipkogeichirchir2@gmail.com',
+                                                                    clientId: '719159077041-lorf8m8a343e5lvorcb30grmuivj83gj.apps.googleusercontent.com',
+                                                                    clientSecret: 'amUTHetZ4xgJGU8TZotQYzId',
+                                                                    refreshToken: '1/ApjZeSbzzalpBvpqAcF4qUetTjZsDeI8qV2J9aEsXAI'
+                                                                   // accessToken: 'ya29.GlvgBgOy44LT1c4VzPnrNCI6k_oTWxDYan6vy_FE1VBJU_Yn-HyG1iWBYAdKUEfcEgHFF7gdPoL7HsgeG_M0JksfYVCZIVUvg7vgmuKodn-KBnLshpuiZcjo0aXp'
+                                                                }
+            });
+            var mailOptions = {
+                        to: user.email,
+                        from:'kipkogeichirchir2@gmail.com',
+                        subject:'House Recommender Account Password Reset',
+                        text:'You are receiving this  mail to set your password and account  ' +'\n\n'+
+                        'Click on the link or paste it into your browser to go on and reset your password'+'\n\n' +
+                        'http://'+ req.headers.host +'/resetpassword/'+token + '\n\n'+
+                        'if you did not request password reset . Kindly  ignore this email'
+                        };
                 
-//                 }
-//             });
-//             var mailOptions = {
-//                 to: user.email,
-//                 from:'StreetSweeperKE',
-//                 subject:'Account Password Reset',
-//                 text:'You are receiving this  mail to set your password and account  ' +'\n\n'+
-//                 'Click on the link or paste it into your browser to go on and reset your password'+'\n\n' +
-//                 'http://'+ req.headers.host +'/resetpassword/'+token + '\n\n'+
-//                 'if you did not request password reset . Kindly s please ignore this email'
-//                 };
-//                 smtpTransport.sendMail(mailOptions, function(err){
-//                  //console.log(mailOptions);
-//                 req.flash('success','An email has been sent to you with further instructions to reset your password.');
-//                 res.redirect("/login");
-//                 done(err, 'done');
-//                 });
-//         }
-//         ], function(err){
-//             if(err){ 
-//                 return next();
-//         }else{
+                smtpTransport.sendMail(mailOptions, function(error,response){
+                       //  console.log(mailOptions);
+                         if(error){
+                             console.log(error)
+                             req.flash('error','An error occured,please try again');
+                             res.redirect('back')
+                         }else{
+                                logger.infoLog.info(middleware.capitalize(user.username ) + " has requested for password reset " +  " at " + moment(moment().valueOf()).format('h:mm:a, Do MMMM  YYYY,') )
+                             req.flash('success','A mail has been sent to you with further instructions to reset your password. Check your email.');
+                             res.redirect("/login")
+                               
+                         }
+                });
+        }
+        ], function(err){
+            if(err){ 
+                console.log(err);
+        }else{
             
-//         }
-//     });
-// });
+        }
+    });
+});
 
-// router.get("/resetPassword/:token",function(req, res) {
-//     User.findOne({resetPasswordToken:req.params.token,resetPasswordExpires:{ $gt:Date.now()} },function(err,user){
-//         if(!user){
-//           // console.log("token time has expired or invalid");
-//              req.flash('error','reset password token is invalid or has expired');
-//              res.redirect("/login");
-//         }
-//       else{
-//           console.log(req.body);
-//           res.render("resetpassword",{token: req.params.token,});
+router.get("/resetPassword/:token",function(req, res) {
+    User.findOne({resetPasswordToken:req.params.token},function(err,user){
+        if(!user){
+          // console.log("token time has expired or invalid");
+             req.flash('error','reset password token is invalid or has expired');
+             res.redirect("/login");
+        }
+      else{
+         
+          res.render("resetpass",{token: req.params.token,});
     
-//       }
-// })
-// });
+      }
+})
+});
 
 //Reset password
 
-// router.post("/resetPassword/:token",function(req, res) {
-//      async.waterfall([
-//         function(done){
-//                      User.findOne({resetPasswordToken:req.params.token,resetPasswordExpires:{ $gt:Date.now()} },function(err,user,next){
-//                 if(!user){
-//                     console.log("token time has expired or invalid");
-//                     console.log(err);
-//                      req.flash('error','reset password token is invalid or has expired');
-//                      res.redirect("/login");
-//                 }
-//                 if(req.body.password===req.body.confirmPassword){
-//                  //console.log(req.body.password);
-//                 //  console.log(req.user.email);
-//                  user.setPassword(req.body.password,function(err){
-//                      user.resetPasswordToken = undefined;//The reset tokesn are removed
-//                      user.resetPasExpires = undefined;//
+ router.post("/resetPassword/:token",function(req, res) {
+     
+                     User.findOne({resetPasswordToken:req.params.token},function(err,user,next){
+                if(!user){
+                    console.log("token time has expired or invalid");
+                    console.log(err);
+                     req.flash('error','reset password token is invalid or has expired');
+                     res.redirect("/login");
+                }
+                if(req.body.pass1===req.body.pass2){
+                 //console.log(req.body.password);
+                //  console.log(req.user.email);
+                console.log(user)
+                 user.setPassword(req.body.password,function(err){
+                     user.resetPasswordToken = undefined;//The reset tokesn are removed
+                    // user.resetPasExpires = undefined;//
                      
-//                      user.save(function(){//saves the new details for the user to database
-//                     req.logIn(user,function(err){
-//                           req.flash('success','Password Succesfully set. Welcome');
-//                         done(err,user);
-//                     });
+                     user.save(function(){//saves the new details for the user to database
+                    req.logIn(user,function(err){
+                          req.flash('success','Password Succesfully set. Welcome');
+                    });
                     
-//                  });
-//              });
-//              }else
-//              {
-//                   req.flash('error','Password do not match');
-//                      res.redirect("back");
-//              }
-//             });
-//         },
-//          function( user, done){
-//             var smtpTransport = nodemailer.createTransport({
-//                 service:'Gmail',
-//                 auth:{
-//                     user:'webemailkip@gmail.com',
-//                     pass:'parcel1002017'
-                
-//                 }
-//             });
-//             var mailOptions = {
-//                 to: user.email,
-//                 from:'webemailkip@gmail.com',
-//                 subject:'Admin Panel',
-//                 text:"Hello\n\n" + "This is a confirmation that the password for your StreetSweeperKE Admin account has just been changed successfully"
-//                 };
-//                 smtpTransport.sendMail(mailOptions, function(err){
-//             logger.infoLog.info(middleware.capitalize(user.username) + "has successfully changed their password");
-//                 req.flash('success','Success,Your password has been changed.');
-//                 done(err);
-//                 });
-//         }
-//         ], function(err){
-//             if(err){ 
-//                 return next();
-                
-//             }
-//              res.redirect("/panel");
-//         }
-// )});
+                 });
+             });
+             }else
+             {
+                  req.flash('error','Password do not match');
+                     res.redirect("back");
+             }
+            });
 
+         
+});
 
+router.get("/contact",async(req,res,next)=>{
+    res.render("contact")
+})
+
+router.post("/contact",async(req,res,mext)=>{
+    console.log(req.body)
+    if(!req.body.name){
+        req.flash('error','You must include your name')
+        res.redirect('back')
+    }else if(!req.body.mail){
+        req.flash('error','You must include your email')
+        res.redirect('back')
+    }else if(!req.body.message){
+        req.flash('error','You must leave a message')
+        res.redirect('back')
+    }else  if(!req.body.subject){
+        req.flash('error','You must include the message subject')
+        res.redirect('back')
+    }else{
+                  async.waterfall([
+                                             function(done){
+                                            var smtpTransport = nodemailer.createTransport({
+                                                          host: 'smtp.gmail.com',
+                                                                port: 465,
+                                                                secure: true,
+                                                                auth: {
+                                                                    type: 'OAuth2',
+                                                                    user: 'kipkogeichirchir2@gmail.com',
+                                                                    clientId: '719159077041-lorf8m8a343e5lvorcb30grmuivj83gj.apps.googleusercontent.com',
+                                                                    clientSecret: 'amUTHetZ4xgJGU8TZotQYzId',
+                                                                    refreshToken: '1/ApjZeSbzzalpBvpqAcF4qUetTjZsDeI8qV2J9aEsXAI'
+                                                                   // accessToken: 'ya29.GlvgBgOy44LT1c4VzPnrNCI6k_oTWxDYan6vy_FE1VBJU_Yn-HyG1iWBYAdKUEfcEgHFF7gdPoL7HsgeG_M0JksfYVCZIVUvg7vgmuKodn-KBnLshpuiZcjo0aXp'
+                                                                }
+                                                                                                                    
+                                                    
+                                            })
+                                            // console.log(smtpTransport)
+                                            
+                                            var mailOptions = {
+                                                to: 'kipkogeichir2@gmail.com',
+                                                from:'kipkogeichirchir2@gmail.com',
+                                                subject:req.body.subject,
+                                                text:req.body.message +'\n User E-mail: '+req.body.mail+'\n Name:'+req.body.name
+                                                };
+                                                smtpTransport.sendMail(mailOptions, function(err,info){
+                                                //req.io.sockets.to('masterRoom').emit('new-admin', uname) 
+                                                if(err){
+                                                    console.log(err)
+                                                    res.redirect('back');
+                                                }else{
+                                                    console.log(info)
+                                                      req.flash('success','Your message has been sent. Wait for response in your mail');
+                                                      res.redirect("back");
+                                                }
+                                              
+                                              // console.log(info);
+                                                //done(err, 'done');
+                                                });
+                                            }
+                                            ], function(err){
+                                                if(err){ 
+                                                    // return next();
+                                                    console.log(err);
+                                            }else{
+                                                
+                                            }
+                                         });
+    }
+               
+})
 
 
 

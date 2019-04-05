@@ -1,6 +1,6 @@
 const User   = require("../models/user");
 
-
+const requestify=require("requestify");
 const crypto                  = require("crypto");
 const async                   = require("async");
 const nodemailer              =  require("nodemailer");
@@ -8,9 +8,21 @@ const express               = require("express");
 const app                  = express();
 const middlewareObj = {};
 const moment = require('moment');
-//const Verifier =require("email-verifier");
-const logger               = require('../logger/logger')
+const faker                 = require('faker/locale/en');
+const Message                =require("../models/message");
+var randomLocation = require('random-location')
 
+const logger               = require('../logger/logger')
+ const googleMapsClient = require('@google/maps').createClient({
+              key: 'AIzaSyAWuJ6jjAlCJqpKPvYgvENDFdCUWv-nOe0'
+            });
+            
+   const P = {
+              latitude: -1.2814369,
+              longitude: 36.7394723
+}
+ 
+const R = 15000
 // middlewareObj.emailVerifier=function(req,res){
 //     var email=req.body.email;
 //     let verifier=new Verifier("at_8EuvZm3nDak0xfhj2tE1mN1XhcHte");
@@ -27,6 +39,7 @@ const logger               = require('../logger/logger')
 //     });
     
 // }
+//create an house
 
 //To check is user is logged in
 middlewareObj.isLoggedIn = function (req, res, next){
@@ -36,9 +49,29 @@ middlewareObj.isLoggedIn = function (req, res, next){
         return next();
     }
     req.session.returnTo = req.path; 
+    req.flash('error','Please Login first')
     res.redirect("/login");
 }
 //To check is user is Admin
+middlewareObj.caclRadius= function calcCrow(lat1, lon1, lat2, lon2) 
+    {
+        function toRad(Value) {
+    /** Converts numeric degrees to radians */
+             return Value * Math.PI / 180;
+        }
+      var R = 6371; // km
+      var dLat = toRad(lat2-lat1);
+      var dLon = toRad(lon2-lon1);
+      var lat1 = toRad(lat1);
+      var lat2 = toRad(lat2);
+
+      var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+        Math.sin(dLon/2) * Math.sin(dLon/2) * Math.cos(lat1) * Math.cos(lat2); 
+      var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+      var d = R * c;
+      return d;
+    }
+
 middlewareObj.isAdmin = function (req, res, next){
     if(req.user.role === 'admin'){
         
@@ -47,19 +80,86 @@ middlewareObj.isAdmin = function (req, res, next){
    
     res.redirect("/somethinguser");
 }
-middlewareObj.isMasterAdmin=function(req,res,next){
-            if(req.user.role==='master-admin'){
+
+middlewareObj.isHouseOwner=function(req,res,next){
+            if(req.user.role==='house-Owner'){
                 return next();
             }else{
-                logger.infoLog.info(req.user.username + " has just tried to access Master-admin route ::"+"\x1b[31m"+" Access Denied!"+"\x1b[0m" );
+                logger.infoLog.info(req.user.username + " has just tried to access post-House Route ::"+"\x1b[31m"+" Access Denied!"+"\x1b[0m" );
                 
                 req.flash("error","You are not privilegded to access this route!")               
-                res.redirect("/");
+                res.redirect("back");
             }
     }
+    
 middlewareObj.isRealString = function(str){
     return typeof str === 'string' && str.trim().length > 0;
 };
+
+middlewareObj.getLocation= async function(owners){
+   var locname;
+   var locations=new Array();
+   for(var i=0;i<owners;i++){
+            var randomPoint = randomLocation.randomCirclePoint(P, R)
+                        var latitude=randomPoint.latitude;
+                        var longitude=randomPoint.longitude;
+            let newpromise= new Promise((resolve,reject)=>{
+              requestify.get('https://maps.googleapis.com/maps/api/geocode/json?latlng='+latitude+','+longitude+'&location_type=APPROXIMATE'+'&key=AIzaSyAWuJ6jjAlCJqpKPvYgvENDFdCUWv-nOe0').then(function(response) {
+                    response.getBody();
+                    var loc=JSON.parse(response.body)
+                    locname=loc.results[0].formatted_address;
+                   resolve(locname)
+                   });
+       })
+      await newpromise; 
+      let promise2=new Promise((resolve)=>{
+          var loc={
+                            coordinates:{
+                                        lat:latitude,
+                                         long:longitude
+                                         },
+                                name: locname
+             }
+               locations.push(loc)
+               resolve(locations)
+      })
+      await promise2;
+    }
+        
+      return locations;
+};
+middlewareObj.setHouseOwner=async function(){
+    var query='house-Owner'
+    var owners=new Array();
+    let promise=new Promise((resolve)=>{
+               User.find({role:query},(error,users)=>{
+                owners=users
+             resolve(owners)
+         })
+    })
+   await promise;
+   return owners;
+}
+middlewareObj.setRandomNoUsers=async function(n){
+    var num=faker.random.number({ 'min': 0,
+                                             'max': n
+                                 });
+   return num;
+}
+middlewareObj.rateHouses=async function(){
+            var users=new Array();
+    let promise=new Promise((resolve)=>{
+               User.find({},(error,users)=>{
+                  users.forEach((owner,i)=>{
+                  users.push(owner);
+             })
+             resolve(users)
+         })
+    })
+   await promise;
+};
+
+     
 
  middlewareObj.isActive=(req,res,next)=>{
    //  console.log(req.body);
@@ -79,6 +179,13 @@ middlewareObj.isInArray = function(value, array){
        return array.indexOf(value) > -1;
  
 };
+middlewareObj.compare=function compare(a,b) {
+  if (a.similarity < b.similarity)
+    return 1;
+  if (a.similarity > b.similarity)
+    return -1;
+  return 0;
+}
 middlewareObj.stripEndQuotes = function (s){
 	var t=s.length;
 	s=s.substring(1,t--);

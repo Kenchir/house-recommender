@@ -31,14 +31,12 @@
   <meta property="og:description" content="Start your development with a Dashboard for Bootstrap 4.">
   <meta property="og:site_name" content="Creative Tim">
   <!-- Google Tag Manager -->
+    
    <script src="https://maps.googleapis.com/maps/api/jsvv=3.exp&sensor=false&libraries=places"></script>
-  <script src="https://connect.facebook.net/signals/config/111649226022273?v=2.8.40&amp;r=stable" async=""></script><script async="" src="//connect.facebook.net/en_US/fbevents.js"></script><script type="text/javascript" async="" src="https://ssl.google-analytics.com/ga.js"></script><script type="text/javascript" async="" src="https://www.google-analytics.com/analytics.js"></script><script async="" src="https://www.googletagmanager.com/gtm.js?id=GTM-NKDMSK6"></script><script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','GTM-NKDMSK6');</script>
+  
   <!-- End Google Tag Manager -->
   <!-- Favicon -->
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
   <link href="./assets/img/brand/favicon.png" rel="icon" type="image/png">
   <!-- Fonts -->
   <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700" rel="stylesheet">
@@ -47,10 +45,12 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   <link href="./assets/vendor/@fortawesome/fontawesome-free/css/all.min.css" rel="stylesheet">
   <!-- Argon CSS -->
   <link type="text/css" href="./assets/css/argon.min.css?v=1.0.0" rel="stylesheet">
-<style type="text/css">/* Chart.js */
-@-webkit-keyframes chartjs-render-animation{from{opacity:0.99}to{opacity:1}}@keyframes chartjs-render-animation{from{opacity:0.99}to{opacity:1}}.chartjs-render-monitor{-webkit-animation:chartjs-render-animation 0.001s;animation:chartjs-render-animation 0.001s;}</style></head>
-
+  
+ <script src="/scripts/geoMap.js"></script>
+       <script src="/scripts/uploadvalidator.js"></script>
+ <link type="text/css" href="/index.css" rel="stylesheet">
 <body>
+   <button class="geomap"></button>
   <!-- Google Tag Manager (noscript) -->
   <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-NKDMSK6" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <!-- End Google Tag Manager (noscript) -->
@@ -222,18 +222,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                 <i class="ni ni-single-02"></i>
                 <span>My profile</span>
               </a>
-              <a href="#" class="dropdown-item">
-                <i class="ni ni-settings-gear-65"></i>
-                <span>Settings</span>
-              </a>
-              <a href="#" class="dropdown-item">
-                <i class="ni ni-calendar-grid-58"></i>
-                <span>My Posts</span>
-              </a>
-              <a href="#" class="dropdown-item">
-                <i class="ni ni-support-16"></i>
-                <span>Support</span>
-              </a>
+             
               <div class="dropdown-divider"></div>
               <a href="/logout" class="dropdown-item">
                 <i class="ni ni-user-run"></i>
@@ -256,27 +245,37 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
            <div id="inputs-component" class="tab-pane tab-example-result fade active show" role="tabpanel" aria-labelledby="inputs-component-tab">
               <h6 class="heading-small text-muted mb-4">House information</h6>
                <%if(error && error.length>0){ %>
+               <% error.forEach((err,i)=>{%>
                 <div class="alert alert-warning" role="alert">
-                      <%= error%>
+                      <%= err%>
                 </div>
+                <% })%>
+              <% } %>
+                <%if(house_errors&& house_errors.length>0){ %>
+               <% house_errors.forEach((er,i)=>{%>
+                <div class="alert alert-warning" role="alert">
+                      <%= er%>
+                </div>
+                <% })%>
               <% } %>
               <%if(success && success.length>0){ %>
                 <div class="alert alert-success" role="alert">
                       <%= success%>
                 </div>
               <% } %>
-              <form action="/upload" method="post" enctype="multipart/form-data">
+              <form action="/upload" method="post" enctype="multipart/form-data" onsubmit="setLocation()">
                 <div class="row">
                     <div class="col-lg-6">
                       <div class="form-group focused">
-                        <label class="form-control-label" for="input-username">House Name</label>
-                        <input type="text" name="housename" id="input-username" class="form-control form-control-alternative" placeholder="House name">
+                        <label class="form-control-label" for="input-housename">House Name</label>
+                        <input type="text" name="housename" id="input-housename" class="form-control form-control-alternative" placeholder="House name">
+                        <span class="has-danger"></span>
                       </div>
                     </div>
                     <div class="col-lg-6">
                       <div class="form-group focused">
                         <label class="form-control-label" for="input-username">House Location</label>
-                        <input type="text" name="house_location" id="house_location" class="form-control form-control-alternative" placeholder="Location">
+                        <input type="text" name="house_location" id="house_location" value="" class="form-control form-control-alternative" placeholder="Location">
                       </div>
                     </div>
                       
@@ -290,10 +289,21 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                            <div class="custom-control custom-checkbox mb-3">
                               <input name="room_types" value="Single Room" class="custom-control-input" id="customCheck1" type="checkbox">
                               <label class="custom-control-label" for="customCheck1">Single Room</label>
+                              <div class="form-group focused sroom-price">
+                                <label class="form-control-label" for="input-username">Rent Cost</label>
+                                <input type="text" name="srcost" id="sr-name" class="form-control form-control-alternative">
+                              </div>
+                              
+
                             </div>
+                            
                             <div class="custom-control custom-checkbox mb-3">
-                              <input name="room_types" value="Double Room" class="custom-control-input" id="customCheck2" type="checkbox">
-                              <label class="custom-control-label" for="customCheck2">Double Room</label>
+                              <input name="room_types" value="Own Compound" class="custom-control-input" id="customCheck2" type="checkbox">
+                              <label class="custom-control-label" for="customCheck2">Own Compound</label>
+                              <div class="form-group focused droom-price">
+                                <label class="form-control-label" for="input-username">Rent cost</label>
+                                <input type="text" name="owncost" id="input-username" class="form-control form-control-alternative">
+                              </div>
                             </div>
                             
                         </div>
@@ -302,41 +312,43 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                            <div class="custom-control custom-checkbox mb-3">
                               <input name="room_types" value="Bedsitters" class="custom-control-input" id="customCheck3" type="checkbox">
                               <label class="custom-control-label" for="customCheck3">Bedsitter</label>
+                              <div class="form-group focused bsroom-price">
+                                <label class="form-control-label" for="input-username">Rent cost</label>
+                                <input type="text" name="bscost" id="input-username" class="form-control form-control-alternative">
+                              </div>
                             </div>
+                             
                             <div class="custom-control custom-checkbox mb-3">
                               <input name="room_types" value="One Bedroom" class="custom-control-input" id="customCheck4" type="checkbox">
                               <label class="custom-control-label" for="customCheck4">One Bedroom</label>
+                              <div class="form-group focused 1broom-price">
+                                <label class="form-control-label" for="input-username">Rent cost</label>
+                                <input type="text" name="br1cost" id="input-username" class="form-control form-control-alternative">
+                              </div>
                             </div>
+                             
                         </div>
                         <div class="col-lg-6">
                           
                            <div class="custom-control custom-checkbox mb-3">
-                              <input class="custom-control-input" id="customCheck5" type="checkbox">
-                              <label name="room_types" value="Two Bedroom"  class="custom-control-label" for="customCheck5">Two Bedroom</label>
+                              <input class="custom-control-input" value="Two Bedroom" id="customCheck5" type="checkbox">
+                              <label name="room_types"   class="custom-control-label" for="customCheck5">Two Bedroom</label>
+                              <div class="form-group focused 2broom-price">
+                                <label class="form-control-label" for="input-username">Rent cost</label>
+                                <input type="text" name="br2cost" id="input-username" class="form-control form-control-alternative">
+                              </div>
                             </div>
+                             
                             <div class="custom-control custom-checkbox mb-3">
-                              <input name="room_types" value="One Bedroom"  class="custom-control-input" id="customCheck6" type="checkbox">
+                              <input name="room_types" value="Three Bedroom"  class="custom-control-input" id="customCheck6" type="checkbox">
                               <label class="custom-control-label" for="customCheck6">Three Bedroom</label>
-                            </div>
-                    </div>
-                      <div class="form-group focused price-title" >
-                              <label class="form-control-label" for="input-username">Room Prices</label>
-                        </div>
-                      <div class="col-lg-12 pricing">
-                           <div class="col-lg-6 sroom">
-                              <div class="form-group focused">
-                                <label class="form-control-label" for="input-username">Single Room Price</label>
-                                <input type="text" name="housename" id="input-username" class="form-control form-control-alternative">
+                                <div class="form-group focused 3broom-price">
+                                <label class="form-control-label" for="input-username">Rent cost</label>
+                                <input type="text" name="br3cost" id="input-username" class="form-control form-control-alternative">
                               </div>
                             </div>
-                            <div class="col-lg-6 droom">
-                              <div class="form-group focused">
-                                <label class="form-control-label" for="input-username">Double Room Price</label>
-                                <input type="text" name="housename" id="input-username" class="form-control form-control-alternative">
-                              </div>
-                            </div>
-                            
-                        </div>
+                             
+                     
                     <div class="col-lg-12">
                               <label class="form-control-label">Water Available fulltime?</label>
                           
@@ -358,13 +370,13 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                     
                       <div class="col-lg-6">
                         <div class="custom-control custom-radio mb-3">
-                            <input name="internet_ava" class="custom-control-input" id="customRadio6" value="false" type="radio">
+                            <input name="internet_connectivity" class="custom-control-input" id="customRadio6" value="false" type="radio">
                             <label class="custom-control-label" for="customRadio6">No</label>
                           </div>
                       </div>
                       <div class="col-lg-6">
                      <div class="custom-control custom-radio mb-3">
-                        <input name="internet_ava" class="custom-control-input" id="customRadio7" value="true"  type="radio">
+                        <input name="internet_connectivity" class="custom-control-input" id="customRadio7" value="true"  type="radio">
                         <label class="custom-control-label" for="customRadio7">Yes</label>
                       </div>
                       </div>
@@ -451,20 +463,83 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   <script src="./assets/vendor/chart.js/dist/Chart.extension.js"></script>
   <!-- Argon JS -->
   <script src="./assets/js/argon.min.js?v=1.0.0"></script>
+
   <script></script>
  
   <script>
   
   
    $(document).ready( function () {
-    
-        $('.pricing').hide();
-        $('.price-title').hide();
-          $('#customCheck1').click(function(){
-            $('.price-title').show();
-             $('.pricing').$('.sroom')show();
-        })
      
+       $('.sroom-price').hide(); 
+       $('.droom-price').hide(); 
+       $('.bsroom-price').hide(); 
+       $('.1broom-price').hide(); 
+       $('.2broom-price').hide(); 
+        $('.3broom-price').hide();
+        var check;
+          $('#customCheck1').click(function(){
+              check = $("#customCheck1").is(":checked");
+                   if(check) {
+                    $('.sroom-price').show(); 
+                    $('')
+                } else {
+                    $('.sroom-price').hide(); 
+                    $('#sr-name').val('');
+                }
+                 
+            })
+            $('#customCheck2').click(function(){
+              check = $("#customCheck2").is(":checked");
+                   if(check) {
+                    $('.droom-price').show(); 
+                } else {
+                    $('.droom-price').hide(); 
+                    $('.droom-price').children('#input-username').val('');
+                }
+                 
+            })
+            $('#customCheck3').click(function(){
+              check = $("#customCheck3").is(":checked");
+                   if(check) {
+                    $('.bsroom-price').show(); 
+                } else {
+                    $('.bsroom-price').hide(); 
+                    $('.bsroom-price').children('#input-username').val('');
+                }
+                 
+            })
+            $('#customCheck4').click(function(){
+              check = $("#customCheck4").is(":checked");
+                   if(check) {
+                    $('.1broom-price').show(); 
+                } else {
+                    $('.1broom-price').hide(); 
+                    $('.1broom-price').children('#input-username').val('');
+                }
+                 
+            })
+            $('#customCheck5').click(function(){
+              check = $("#customCheck5").is(":checked");
+                   if(check) {
+                    $('.2broom-price').show(); 
+                } else {
+                    $('.2broom-price').hide(); 
+                    $('.2broom-price').children('#input-username').val('');
+                }
+                 
+            })
+            $('#customCheck6').click(function(){
+              check = $("#customCheck6").is(":checked");
+                   if(check) {
+                    $('.3broom-price').show(); 
+                } else {
+                    $('.3broom-price').hide(); 
+                    $('.3broom-price').children('#input-username').val('');
+                }
+                 
+            })
+            
         $('#customRadio4').click(function(){
              $('#customRadio5').val('');
             
@@ -522,8 +597,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 }
 
 document.querySelector('#images').addEventListener("change", previewImages);
+
   </script>
-     <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAWuJ6jjAlCJqpKPvYgvENDFdCUWv-nOe0&libraries=places&callback=activatePlacesSearch"></script>
+     <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBjsdFT4HpouHSdJX7fFPJg6Ym7re9ksuM&libraries=places&callback=activatePlacesSearch"></script>
   <noscript>
     <img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=111649226022273&ev=PageView&noscript=1" />
   </noscript>
