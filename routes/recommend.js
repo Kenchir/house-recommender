@@ -449,8 +449,15 @@ async function findSimilarHouses(id){
 
 
 router.get("/index",middleware.isLoggedIn,async(req,res,next)=>{
- 
-        
+            var houses=new Array();
+        let housepromise= new Promise((resolve,reject)=>{
+                    House.find({}).limit(50)
+                        .then((houses)=>{
+                            resolve(houses)
+                        })
+            });
+            
+            houses=await housepromise;
        //  console.log(req.user._id)
             var locations;
            let newPromise2=new Promise((resolve,reject)=>{
@@ -470,21 +477,56 @@ router.get("/index",middleware.isLoggedIn,async(req,res,next)=>{
                                 )
                      
                        })     
+                       
                     await newPromise2;// createHouse()
          //  console.log(locations)
-         let all_houses;
-            let house_promise= new Promise((resolve,reject)=>{
-                    RecommendedHouses.findOne({user_id:req.user._id})
-                        .then((houses)=>{
-                            resolve(houses)
+         var rechouses=new Array();
+         let rec=new Promise((resolve)=>{
+             RecommendedHouses.findOne({user_id:req.user._id}).lean()
+                    .then((found)=>{
+                        if(found){
+                        var gothouses=found.houses
+                        //console.log(gothouses[2])
+                        gothouses.forEach((house,i)=>{
+                              //console.log(i)
+                              if(house!=null){
+                                    if(house.hasOwnProperty('name')){
+                                        if(house.hasOwnProperty('location')){
+                                            if(house.hasOwnProperty('rating')){
+                                                if(house.hasOwnProperty('_id')){
+                                                    if(house.hasOwnProperty('house_types')){
+
+                                                                var rat=house.rating
+                                                               // console.log(rat);
+                                                            if(rat.hasOwnProperty('avg_rating')){
+                                                                if(house.rating.avg_rating>3.3){
+                                                                      rechouses.push(house)
+                                                                }
+                                                            
+                                                            }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                           
+                                                
+                                       
+                                    }
+                              }
                         })
-            });
-            
-           let all_rec=await house_promise;
-          // console.log(all_rec.houses.length)
-            if(all_rec){
-              all_houses=all_rec.houses;
-            }else{
+                        }
+                         resolve(rechouses)
+                         // console.log(rechouses.length)
+                    })
+                    .catch((err)=>{
+                        console.log(err)
+                    })
+                   
+         })
+         await rec;
+        
+         var all_houses= new Array();
+       
                     let house_promise= new Promise((resolve,reject)=>{
                     House.find({}).limit(50)
                         .then((houses)=>{
@@ -493,7 +535,7 @@ router.get("/index",middleware.isLoggedIn,async(req,res,next)=>{
             });
             
             all_houses=await house_promise;  
-            }
+            
            //console.log(all_houses.length)
             var recentV=new Array();
             
@@ -503,26 +545,35 @@ router.get("/index",middleware.isLoggedIn,async(req,res,next)=>{
                                    if(found.length>0){
                                        var view=found[0].houses.length;
                                       // console.log(view)
-                                        all_houses.forEach((house,i)=>{
-                                            if(house._id==found[0].houses[view-1]){
+                                        houses.forEach((house,i)=>{
+                                          //  console.log(house._id)
+                                            if(house._id){
+                                                 if(house._id==found[0].houses[view-1]){
                                               //  console.log(house)
                                                 recentV.push(house)
                                                 //console.log(recentV)
                                             }else if(house._id==found[0].houses[view-2]){
                                                 recentV.push(house)
-                                            }else  if(house._id==found[0].houses[view-3]){
+                                            }else  if(house._id==found[0].houses[view-4]){
+                                                recentV.push(house)
+                                            }else  if(house._id==found[0].houses[view-5]){
+                                                recentV.push(house)
+                                            }else  if(house._id==found[0].houses[view-6]){
+                                                recentV.push(house)
+                                            }else  if(house._id==found[0].houses[view-7]){
                                                 recentV.push(house)
                                             }
+                                            }
+                                           
                                        })
                                     resolve(recentV)
                                    }else{
                                       resolve(recentV)
                                    }
                              })
-                            
-                            
                        })     
                   await promise3;
+                  
                 //  console.log(req.user)
                  
                   var locs =new Array();
@@ -530,7 +581,7 @@ router.get("/index",middleware.isLoggedIn,async(req,res,next)=>{
                      let promise4= new Promise((resolve,reject)=>{
                          locations.forEach((place,i)=>{
                                 
-                                all_houses.forEach((house,p)=>{
+                                houses.forEach((house,p)=>{
                                     if(place._id==house.location.name){
                                        if(locs.includes(place)==false){
                                            locs.push(place) }
@@ -540,8 +591,9 @@ router.get("/index",middleware.isLoggedIn,async(req,res,next)=>{
                             });
                          })
               await promise4;
+            //  console.log(all_houses)
                 //console.log('hehe')
-               res.render("index",{houses:all_houses,places:locs,viewed:recentV});
+               res.render("index",{houses:all_houses,places:locs,viewed:recentV,rec:rechouses});
               
         
 })

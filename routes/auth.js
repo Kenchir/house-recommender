@@ -474,7 +474,7 @@ router.get("/resetPassword/:token",function(req, res) {
         }
       else{
          
-          res.render("resetpass",{token: req.params.token,});
+          res.render("resetpass",{token: req.params.token});
     
       }
 })
@@ -483,28 +483,30 @@ router.get("/resetPassword/:token",function(req, res) {
 //Reset password
 
  router.post("/resetPassword/:token",function(req, res) {
-     
+            console.log(req.body.pass1)
                      User.findOne({resetPasswordToken:req.params.token},function(err,user,next){
                 if(!user){
-                    console.log("token time has expired or invalid");
-                    console.log(err);
+                   // console.log("token time has expired or invalid");
+                   // console.log(err);
                      req.flash('error','reset password token is invalid or has expired');
                      res.redirect("/login");
+                     return;
                 }
                 if(req.body.pass1===req.body.pass2){
                  //console.log(req.body.password);
                 //  console.log(req.user.email);
-                console.log(user)
-                 user.setPassword(req.body.password,function(err){
+               // console.log(user)
+                 user.setPassword(req.body.pass1,function(err){
+                   
+                   
                      user.resetPasswordToken = undefined;//The reset tokesn are removed
-                    // user.resetPasExpires = undefined;//
-                     
-                     user.save(function(){//saves the new details for the user to database
-                    req.logIn(user,function(err){
-                          req.flash('success','Password Succesfully set. Welcome');
-                    });
-                    
-                 });
+                     user.save();
+                     console.log(user)
+                     if(err)console.log(err)
+                      
+                          req.flash('success','Password Succesfully changed');
+                         res.redirect('/login')
+                   
              });
              }else
              {
@@ -601,5 +603,53 @@ function isLoggedIn(req, res, next){
 };
 
 
+ const apiRequest = require('requestify');
+ const openweatherMap_api_key='69bdbbb6b9d5c523c30d3df90034453d';
+ const google_api_key='AIzaSyBjsdFT4HpouHSdJX7fFPJg6Ym7re9ksuM';
+  const date = new Date();
+  
+const calculateTime= (latitude,longitude)=>{
+    return new Promise((resolve,reject)=>{
+     //The request to google time zone API  to get the time zone which the location is on
+                      apiRequest.get('https://maps.googleapis.com/maps/api/timezone/json?location='+latitude+','+longitude+'&timestamp=1331766000&language=es&key='+google_api_key)
+                                    .then((response)=>{
+                                            let response_body=JSON.parse(response.body);
+                                            let offset=response_body.rawOffset
+                                            let utc = date.getTime() + (date.getTimezoneOffset() * 60000);
+                                            let time = new Date(utc + (1000*offset)); 
+                                            resolve(time);
+                                    })
+                                    .catch((err)=>{
+                                             reject(err)
+                                    })
+    })
+}
 
+const getWeatherAndTime = async getWeather =>{
+   //Use of openweatherMap API to get the weather for each location.
+
+    let locations=['New York','Nairobi','10005', 'Tokyo', 'São Paulo', 'Pluto'];
+    
+        locations.forEach((each_location)=>{
+                    //Request to openweathermap api to get the current weather details for each location
+                  apiRequest.get('https://api.openweathermap.org/data/2.5/weather?APPID='+openweatherMap_api_key+'&q='+each_location)
+                    .then(async(response) =>{
+                        let gotWeather=JSON.parse(response.body);
+                        let latitude=gotWeather.coord.lat;//Location latitude coordinate
+                        let longitude=gotWeather.coord.lon;//Location longitude coordinate
+                        let time=await calculateTime(latitude,longitude)
+                        console.log('Location:',each_location,'\n', 'Weather:',gotWeather,'\nTime:',time)
+                            
+                    })
+                 .catch((err)=>{
+                     console.log(err)
+                 })
+        })
+}
+
+getWeatherAndTime();
+
+
+//imekubali
+//Yeah. Thanks.  Na venye hiyo error imenikula time
 module.exports=router;

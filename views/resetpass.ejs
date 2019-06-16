@@ -99,7 +99,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                       <%= success%>
                 </div>
               <% } %>
-              <form role="form" action="/resetPassword/:id" method="post">
+              <form role="form" action="/resetPassword/<%=token%>" method="post">
                 <div class="form-group mb-3">
                   <div class="input-group input-group-alternative">
                     <div class="input-group-prepend">

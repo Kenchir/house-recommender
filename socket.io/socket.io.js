@@ -38,7 +38,65 @@ io.on('connection',(socket)=>{
     //Save and send bid
     
   
-   
+    socket.on('accept-bid',function(data,cb){
+    
+         var isValid = Bid.validate({
+       id: data.assignmentId, 
+       postedBy: data.postedBy,
+       bidder:data.bidder,
+       amount:data.amount
+       });
+        if(isValid.error){
+        console.log(isValid.error)
+      //Add response to invalid on client side
+          return cb('error','Failed to accept bid');
+         }
+            Assignment.findOneAndUpdate({_id:isValid.value.id},{status:'accepted',worker:isValid.value.bidder},function(err,found){
+                if(err){console.log(err)}
+                else if(found&&found.status==="posted"){
+                         var newConversation={
+                            //  _id:'bid',
+                        'party1':isValid.value.postedBy,
+                        'party2':isValid.value.bidder,
+                        'lastActivity':moment().valueOf()
+                        }
+                        Conversation.create(newConversation,function(err,created){
+                            if(err){console.log(err)}
+                            else if(created){
+                        var accMsg = {
+                        'type':'accept',
+                        'msg':'Your bid for '+ found.unit +' has been accepted ',
+                        'for':found.unit,
+                        'amount':isValid.value.amount ,
+                        'assId':isValid.value.id ,
+                        'from':isValid.value.postedBy,
+                        'to':isValid.value.bidder,
+                        'conversationId':'bid',
+                        'createdAt':moment().valueOf()
+                        }
+                        //Send message if online
+                        if (clients[isValid.value.bidder]){
+                          console.log(isValid.value.bidder + " is  online, sending accept message." );
+                         io.sockets.connected[clients[isValid.value.bidder].socket].emit("accept-message", accMsg);
+                         } else {
+                          console.log(isValid.value.bidder + " is not online .Saving message assignment will be saved"); 
+                         }    
+                        //Save message
+                                Message.create(accMsg,function (err){
+                                     if (err) throw err;
+                                      return cb('success', 'You have accepted the bid go to "My assignments"');
+                                 });
+                                 
+                                }
+                            });
+             
+                    
+                }else{
+                     return cb('error', 'An error occured');
+                }
+             
+            });
+    });
     //Send chat message
         socket.on('send-message',function(data,cb){
     console.log('send inbox message request received from ' + data.from);
@@ -157,13 +215,13 @@ io.on('connection',(socket)=>{
           
      });
       socket.on('chat message',async(data,cb)=>{
-     //  console.log(data)
+       //console.log(data)
       })
          socket.on('my-location',async(data,cb)=>{
                  const googleMapsClient = require('@google/maps').createClient({
                              key: 'AIzaSyBjsdFT4HpouHSdJX7fFPJg6Ym7re9ksuM'
                            });
-             //console.log(data);
+             console.log(data);
                         
                      //   var house_loc;
                         var locname;
@@ -173,10 +231,10 @@ io.on('connection',(socket)=>{
                                   
                                    response.getBody();
                                    var loc=JSON.parse(response.body)
-                                 //  console.log(loc)
+                                  // console.log(loc)
                                    locname=loc.results[0].formatted_address;
                                    resolve(locname)
-                                  // console.log(locname)
+                                   console.log(locname)
                                   })
                                   .catch((err)=>{
                                      console.log(err)

@@ -53,27 +53,27 @@ router.post("/house/:id/messagedirect", middleware.isLoggedIn, async(req, res)=>
     
         res.locals.tfor = owneruser.username;
     Conversation.findOne({
-    $or : [
-        { $and : [ { party1 :owneruser.username}, { party2: req.user.username} ] },
-        { $and : [  { party2 :req.user.username}, { party1: owneruser.username}] }
-    ]
-    }).exec(function(err,found){
-        if(err){console.log(err)}
-        else if(found){
-            console.log('Conversation exists btw the two');
-        
-             found.lastActivity = moment().valueOf();
-             found.save(function(err){
-                 if(err){console.log(err)}
-                 else{
-                     console.log('redirect to inbox with param fetch existing');
-                                     res.redirect("/inbox?tfor="+owneruser.username);  
-                 }
-             });
-          
-          
-        }else{
-            //console.log('No conversation exists creating new');
+            $or : [
+                { $and : [ { party1 :owneruser.username}, { party2: req.user.username} ] },
+                { $and : [  { party2 :req.user.username}, { party1: owneruser.username}] }
+            ]
+            }).exec(function(err,found){
+                if(err){console.log(err)}
+                else if(found){
+                    console.log('Conversation exists btw the two');
+                
+                     found.lastActivity = moment().valueOf();
+                     found.save(function(err){
+                         if(err){console.log(err)}
+                         else{
+                             console.log('redirect to inbox with param fetch existing');
+                                             res.redirect("/inbox?tfor="+owneruser.username);  
+                         }
+                     });
+                  
+                  
+                }else{
+                    //console.log('No conversation exists creating new');
             //console.log(found);
             var newConversation={
                

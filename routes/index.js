@@ -435,43 +435,71 @@ router.get("/upload",middleware.isLoggedIn,middleware.isHouseOwner,(req,res)=>{
 
 //var pictures=upload.single('image');
 router.post("/upload",middleware.isLoggedIn, upload.array('images'),async(req,res,next)=>{
-    const googleMapsClient = require('@google/maps').createClient({
-              key: 'AIzaSyAWuJ6jjAlCJqpKPvYgvENDFdCUWv-nOe0'
-            });
-         
-    var m=JSON.parse(req.body.house_location)
- 
-         var p_location={
-                    lat:m.latitude,
-         }
+    //console.log(req.body)
+    //return
+    if(!req.body.house_location){
+        req.flash('error','The house location not given')
+        res.redirect('back');
+        return;
+    }
+   const googleMapsClient = require('@google/maps').createClient({
+                             key: 'AIzaSyBjsdFT4HpouHSdJX7fFPJg6Ym7re9ksuM'
+                           });
+    //
          var house_loc;
-         var locname;
+         var locaddress;
          let newpromise= new Promise((resolve,reject)=>{
-              requestify.get('https://maps.googleapis.com/maps/api/geocode/json?latlng='+m.latitude+','+m.longitude+'&location_type=APPROXIMATE'+'&key=AIzaSyBjsdFT4HpouHSdJX7fFPJg6Ym7re9ksuM').then(function(response) {
+              requestify.get('https://maps.googleapis.com/maps/api/geocode/json?address='+req.body.house_location+'&key=AIzaSyBjsdFT4HpouHSdJX7fFPJg6Ym7re9ksuM')
+              .then(function(response) {
                     response.getBody();
+                   // console.log(response)
                     var loc=JSON.parse(response.body)
-                    locname=loc.results[0].address_components[0].long_name;
-                    resolve(locname)
-                   });
+                  // console.log(loc)
+                    var name=loc.results[0];
+                   locaddress=name.geometry.location;
+                   // console.log(locname.geometry.location)
+                    resolve(locaddress)
+                   })
+                 .catch((err)=>{
+                     console.log(err)
+                 })
          })
       await newpromise;
+      console.log(locaddress)
+        var locname;
+                        let nepromise= new Promise((resolve,reject)=>{
+                             requestify.get('https://maps.googleapis.com/maps/api/geocode/json?latlng='+locaddress.lat+','+locaddress.lng+'&location_type=APPROXIMATE'+'&key=AIzaSyBjsdFT4HpouHSdJX7fFPJg6Ym7re9ksuM')
+                             .then(function(response) {
+                                  
+                                   response.getBody();
+                                   var loc=JSON.parse(response.body)
+                                  // console.log(loc)
+                                   locname=loc.results[0].formatted_address;
+                                   resolve(locname)
+                                   ///console.log(locname)
+                                  })
+                                  .catch((err)=>{
+                                     console.log(err)
+                                  })
+                        })
+                     await nepromise;
 
      house_loc={
             coordinates:{
-                lat:m.latitude,
-                lang:m.longitude
+                lat:locaddress.lat,
+                long:locaddress.lng
             },
             name:locname
      }
-    console.log(house_loc)
+   
    var isValid;
     var houses=new Array();
     var rooms=req.body.room_types;
     if(!rooms){
-        res.flash('error','No house rooms selected');
+        req.flash('error','No house rooms selected');
         res.redirect('back');
     }
-    console.log(rooms.length)
+    console.log(rooms)
     if(rooms.length>1){
             rooms.forEach((room,i)=>{
                 
@@ -621,7 +649,7 @@ router.post("/upload",middleware.isLoggedIn, upload.array('images'),async(req,re
                         {
                             let filePath = filePaths[i].path;
                             await cloudinary.v2.uploader.upload(filePath, (error,result) => {
-                               console.log( upload_res.length +"vs"+ upload_len)
+                               //console.log( upload_res.length +"vs"+ upload_len)
                                 if(upload_res.length === upload_len-1)
                                 {
                                   /* resolve promise after upload is complete */
@@ -646,18 +674,18 @@ router.post("/upload",middleware.isLoggedIn, upload.array('images'),async(req,re
                     let upload = await multipleUpload; 
                        
                     // console.log('atline 84');
-                    console.log(upload)
+                   // console.log(upload)
                     upload.forEach((upload,)=>{
                         newhouse.images.push(upload.secure_url);
                     });
        
         House.create(newhouse)
                 .then((house)=>{ 
-                    console.log(house.postedBy.username);
+                    //console.log(house.postedBy.username);
                     if(house){
                            req.flash('success',"Images successfully uploaded");
                           res.redirect("/upload");
-                        
+                                console.log(house)
                     }
                 })
                 .catch((err)=>{
@@ -767,7 +795,7 @@ router.get("/view_house/:id/view",middleware.isLoggedIn,async(req,res,next)=>{
       var nearbyHousesbyd=new Array();
 router.post('/recommended',async(req,res,next)=>{
 
-    // console.log(req.body)
+     console.log(req.body)
 housesp.length=0;
     
      let promise= new Promise((resolve)=>{
@@ -776,8 +804,9 @@ housesp.length=0;
          resolve(houses)
         })
      })
+     
     let houses=await promise
-     console.log(houses)
+    // console.log(houses)
      var location=JSON.parse(req.body.location)
      //console.log(houses);
      
@@ -787,10 +816,21 @@ housesp.length=0;
             nearbyHousesbyd.push(house)
          }
      })
-         if(nearbyHousesbyd.length>3){
+         if(nearbyHousesbyd.length>10){
                   housesp.push(nearbyHousesbyd[0]);
                   housesp.push(nearbyHousesbyd[1]);
                   housesp.push(nearbyHousesbyd[2]);
+                  housesp.push(nearbyHousesbyd[3]);
+                  housesp.push(nearbyHousesbyd[4]);
+                  housesp.push(nearbyHousesbyd[5]);
+                  housesp.push(nearbyHousesbyd[6]);
+                  housesp.push(nearbyHousesbyd[7]);
+                  housesp.push(nearbyHousesbyd[8]);
+              }else{
+                  housesp.push(nearbyHousesbyd[0]);
+                  housesp.push(nearbyHousesbyd[1]);
+                  housesp.push(nearbyHousesbyd[2]);
+                  housesp.push(nearbyHousesbyd[3]);
               }
      
      res.redirect("/recommended");
@@ -804,12 +844,47 @@ router.get("/recommended",async function(req,res){
                     resolve(allcomments);
                 }) 
             })
+            let yv=new Promise((resolve)=>{
+                House.find({},(err,found)=>{
+                    resolve(found)
+                })
+            })
+            let houses=await yv;
               let all_comments= await comment_promise;
-             
+              var recentV=new Array();
+            
+               let promise3=new Promise((resolve)=>{
+                                 Viewed.find({user_id:req.user._id},(err,found)=>{
+                                  //console.log('viewed houses:',found.length)
+                                   if(found.length>0){
+                                       var view=found[0].houses.length;
+                                      // console.log(view)
+                                        houses.forEach((house,i)=>{
+                                          //  console.log(house._id)
+                                            if(house._id){
+                                                 if(house._id==found[0].houses[view-1]){
+                                              //  console.log(house)
+                                                recentV.push(house)
+                                                //console.log(recentV)
+                                            }else if(house._id==found[0].houses[view-2]){
+                                                recentV.push(house)
+                                            }else  if(house._id==found[0].houses[view-3]){
+                                                recentV.push(house)
+                                            }
+                                            }
+                                           
+                                       })
+                                    resolve(recentV)
+                                   }else{
+                                      resolve(recentV)
+                                   }
+                             })
+                       })     
+                  await promise3;
         
               //console.log(all_houses.uploadedAt);
-               res.render("recommended",{houses:housesp,comments:all_comments});
-               housesp.length=3;
+               res.render("recommended",{houses:housesp,comments:all_comments,viewed:recentV});
+               housesp.length=10;
   
 });
 

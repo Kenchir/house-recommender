@@ -105,10 +105,7 @@
         <span class="navbar-toggler-icon"></span>
       </button>
       <!-- Brand -->
-      <a class="navbar-brand pt-0" href="/index">
-        <img src="./assets/img/brand/blue.jpg"style="width:100px ;height:200px;"class="navbar-brand-img" alt="...">
-      </a>
-      <span id="time"></span>
+     
       <!-- User -->
     
       <!-- Collapse -->
@@ -117,9 +114,9 @@
         <div class="navbar-collapse-header d-md-none">
           <div class="row">
             <div class="col-6 collapse-brand">
-                <a class="navbar-brand pt-0" href="/index">
-        <img src="./assets/img/brand/blue.jpg"style="width:100px ;height:200px;"class="navbar-brand-img" alt="...">
-      </a>
+          <a class="navbar-brand pt-0" href="/index">
+            <img src="./assets/img/brand/blue.jpg"style="width:100px ;height:200px;"class="navbar-brand-img" alt="...">
+          </a>
             </div>
             <div class="col-6 collapse-close">
               <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#sidenav-collapse-main" aria-controls="sidenav-main" aria-expanded="false" aria-label="Toggle sidenav">
@@ -152,13 +149,7 @@
               <i class="fas fa-envelope"></i>Messages
             </a>
           </li>
-          <li class="nav-item">
-            <a class="nav-link" href="/notifications">
-              <span id='notification' class="badge badge-white" style="color:blue;"></span>
-              <i class="fas fa-bell"></i>Notifications
-              
-            </a>
-          </li>
+     
  
         </ul>
         <!-- Divider -->
@@ -182,7 +173,7 @@
             <a class="nav-link pr-0" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
               <div class="media align-items-center">
                 <span class="avatar avatar-sm rounded-circle">
-                  <img alt="Image placeholder" src="../../assets/img/theme/team-4-800x800.jpg">
+                  <img alt="Image placeholder" src="<%=currentUser.profilepic%>">
                 </span>
                 <div class="media-body ml-2 d-none d-lg-block">
                   <span class="mb-0 text-sm  font-weight-bold"><%= currentUser.username%></span>
@@ -598,7 +589,7 @@
                 <table class="table align-items-center table-flush">
                 <thead class="thead-light">
                    <th scope="col">Phone</th>
-                    <th scope="col">Contact</th>
+                    <th scope="col">E-mail</th>
                 </thead>
                 <tbody>
                      
@@ -608,7 +599,7 @@
                       <%=house.contact.phone%>
                     </td>
                     <td>
-                     Ksh. <%= house.contact.mail%>
+                     <%= house.contact.mail%>
                     </td>
                      
                   </tr>

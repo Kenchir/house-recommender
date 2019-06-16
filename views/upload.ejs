@@ -62,8 +62,8 @@
         <span class="navbar-toggler-icon"></span>
       </button>
       <!-- Brand -->
-      <a class="navbar-brand pt-0" href="./index.html">
-        <img src="./assets/img/brand/blue.png" class="navbar-brand-img" alt="...">
+          <a class="navbar-brand pt-0" href="/index">
+        <img src="./assets/img/brand/blue.jpg"style="width:100px ;height:200px;"class="navbar-brand-img" alt="...">
       </a>
       <!-- User -->
       <ul class="nav align-items-center d-md-none">
@@ -94,18 +94,7 @@
               <i class="ni ni-single-02"></i>
               <span>My profile</span>
             </a>
-            <a href="./examples/profile.html" class="dropdown-item">
-              <i class="ni ni-settings-gear-65"></i>
-              <span>Settings</span>
-            </a>
-            <a href="./examples/profile.html" class="dropdown-item">
-              <i class="ni ni-calendar-grid-58"></i>
-              <span>Activity</span>
-            </a>
-            <a href="./examples/profile.html" class="dropdown-item">
-              <i class="ni ni-support-16"></i>
-              <span>Support</span>
-            </a>
+         
             <div class="dropdown-divider"></div>
             <a href="#!" class="dropdown-item">
               <i class="ni ni-user-run"></i>
@@ -150,26 +139,24 @@
               <i class="ni ni-tv-2 text-primary"></i> Home
             </a>
           </li>
+              <% if(currentUser){%>
+                <% if(currentUser.role==='house-Owner'){%>
+            <li class="nav-item">
+              <a class="nav-link" href="/upload">
+                <i class="ni ni-circle-08"></i>
+                <span class="nav-link-inner--text">Post an House</span>
+              </a>
+            </li>
+            <% }%>
           <li class="nav-item">
-            <a class="nav-link" href="./examples/icons.html">
-              <i class="ni ni-planet text-blue"></i> Search an House
+            <a class="nav-link" href="/inbox">
+              <span id='msg' class="badge badge-white" style="color:blue;"></span>
+              <i class="fas fa-envelope"></i>Messages
             </a>
           </li>
-          <li class="nav-item">
-            <a class="nav-link" href="./examples/maps.html">
-              <i class="ni ni-pin-3 email-83"></i> Inbox
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="./examples/profile.html">
-              <i class="ni ni-single-02 text-yellow"></i> Friends
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="./examples/tables.html">
-              <i class="ni ni-bullet-list-67 text-red"></i> Tables
-            </a>
-          </li>
+        
+        <% }%>
+        </ul>
         </ul>
         <!-- Divider -->
         <hr class="my-3">
@@ -191,23 +178,12 @@
        
         <!-- User -->
         <ul class="navbar-nav align-items-center d-none d-md-flex">
-          <li class="nav-item">
-              <a class="nav-link nav-link-icon" href="/">
-                <i class="ni ni-planet"></i>
-                <span class="nav-link-inner--text">Friends</span>
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link nav-link-icon" href="/register">
-                <i class="ni ni-circle-08"></i>
-                <span class="nav-link-inner--text">Post an House</span>
-              </a>
-            </li>
+          
           <li class="nav-item dropdown">
             <a class="nav-link pr-0" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
               <div class="media align-items-center">
                 <span class="avatar avatar-sm rounded-circle">
-                  <img alt="Image placeholder" src="./assets/img/theme/team-4-800x800.jpg">
+                  <img alt="Image placeholder" src="<%=currentUser.profilepic%>">
                 </span>
                 <div class="media-body ml-2 d-none d-lg-block">
                   <span class="mb-0 text-sm  font-weight-bold"><%= currentUser.username%></span>
@@ -408,24 +384,7 @@
             </div>
           </div>
         </div>
-        <div class="col-xl-4">
-          <div class="card shadow">
-            <div class="card-header bg-transparent">
-              <div class="row align-items-center">
-                <div class="col">
-                  <h6 class="text-uppercase text-muted ls-1 mb-1">Performance</h6>
-                  <h2 class="mb-0">Total orders</h2>
-                </div>
-              </div>
-            </div>
-            <div class="card-body">
-              <!-- Chart -->
-              <div class="chart"><div class="chartjs-size-monitor" style="position: absolute; left: 0px; top: 0px; right: 0px; bottom: 0px; overflow: hidden; pointer-events: none; visibility: hidden; z-index: -1;"><div class="chartjs-size-monitor-expand" style="position:absolute;left:0;top:0;right:0;bottom:0;overflow:hidden;pointer-events:none;visibility:hidden;z-index:-1;"><div style="position:absolute;width:1000000px;height:1000000px;left:0;top:0"></div></div><div class="chartjs-size-monitor-shrink" style="position:absolute;left:0;top:0;right:0;bottom:0;overflow:hidden;pointer-events:none;visibility:hidden;z-index:-1;"><div style="position:absolute;width:200%;height:200%;left:0; top:0"></div></div></div>
-                <canvas id="chart-orders" class="chart-canvas chartjs-render-monitor" style="display: block; width: 270px; height: 350px;" width="270" height="350"></canvas>
-              </div>
-            </div>
-          </div>
-        </div>
+        
       </div>
      
       <!-- Footer -->
@@ -436,20 +395,7 @@
               © 2018 <a href="https://www.creative-tim.com" class="font-weight-bold ml-1" target="_blank">Chirchir</a>
             </div>
           </div>
-          <div class="col-xl-6">
-            <ul class="nav nav-footer justify-content-center justify-content-xl-end">
-              <li class="nav-item">
-                <a href="https://www.creative-tim.com" class="nav-link" target="_blank">Creative Tim</a>
-              </li>
-              
-              <li class="nav-item">
-                <a href="http://blog.creative-tim.com" class="nav-link" target="_blank">Blog</a>
-              </li>
-              <li class="nav-item">
-                <a href="https://github.com/creativetimofficial/argon-dashboard/blob/master/LICENSE.md" class="nav-link" target="_blank">MIT License</a>
-              </li>
-            </ul>
-          </div>
+          
         </div>
       </footer>
     </div>

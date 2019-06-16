@@ -13,7 +13,7 @@ var HouseSchema=new mongoose.Schema({
         }],
     rating:{ avg_rating:Number,
              users_rated:Number,
-                default:{}
+                default:{avg_rating:0,users_rated:0}
           },
     postedBy: String,
     contact:{

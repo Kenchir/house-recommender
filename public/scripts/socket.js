@@ -22,26 +22,26 @@ socket.on('connect', ()=>{
                  
                      initMap = function () {
                       // The location of Uluru
-                    //  console.log(data)
+                      console.log(data)
                     var markerArray = [];
                       var uluru = {lat: parseFloat(data.lat), lng: parseFloat(data.long)};
                        var infowindow = new google.maps.InfoWindow();
                       // The map, centered at Uluru
-                      var directionsService = new google.maps.DirectionsService;
+                     // var directionsService = new google.maps.DirectionsService;
                       var map = new google.maps.Map(
                           document.getElementById('map'), {zoom: 15, center: uluru});
-                      // The marker, positioned at Uluru
-                       var directionsDisplay = new google.maps.DirectionsRenderer({map: map});
-                       var stepDisplay = new google.maps.InfoWindow;
+                    //   // The marker, positioned at Uluru
+                    //   var directionsDisplay = new google.maps.DirectionsRenderer({map: map});
+                    //   var stepDisplay = new google.maps.InfoWindow;
                        
                 
                         // Display the route between the initial start and end selections.
-                        calculateAndDisplayRoute( directionsDisplay, directionsService, markerArray, stepDisplay, map);
+                        //( directionsDisplay, directionsService, markerArray, stepDisplay, map);
                         // Listen to change events from the start and end lists.
-                        var onChangeHandler = function() {
-                          calculateAndDisplayRoute(
-                              directionsDisplay, directionsService, markerArray, stepDisplay, map);
-                        };
+                        // var onChangeHandler = function() {
+                        //   calculateAndDisplayRoute(
+                        //       directionsDisplay, directionsService, markerArray, stepDisplay, map);
+                        // };
                                var marker = new google.maps.Marker({
                         position: uluru, map: map,
                         icon:{
@@ -67,19 +67,28 @@ socket.on('connect', ()=>{
                   });
                   
                 }
+                
+                
                 if(window.location.pathname.search('/index')>-1){
+                    console.log('Meee')
+                    if(navigator){
+                        console.log('works');
+                    }else{
+                        console.log('dont')
+                    }
                       navigator.geolocation.getCurrentPosition(function(position) {
-                          console.log(position)
+                          console.log('I am in',position)
                         var pos = {
                           lat: position.coords.latitude,
                           lng: position.coords.longitude
                         };
-                        console.log(pos);
+                      $('.placeh').val(JSON.stringify(pos));
+                        console.log('Am', $('.placeh').value);
                          socket.emit('my-location',pos,(data)=>{
                                $('.lds-ring').hide();
                            $('.mycurrent-location').html('You are in '+data.location);
-                         
-                           console.log(data.location);
+                             $('.locatm').val(JSON.stringify(pos));
+                           console.log('Am', $('.locatm').val());
                           })
                        
                       });
