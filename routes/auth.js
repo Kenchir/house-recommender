@@ -23,7 +23,7 @@ const logger               = require('../logger/logger');
 const async                 = require("async");
 const nodemailer            =  require("nodemailer");
 //onst { body,validationResult } = require('express-validator/check');
-const { sanitizeBody }      = require('express-validator/filter');
+const { sanitizeBody }      = require('express-validator');
 const cryptoRandomString    = require('crypto-random-string');
 const multer                = require('multer');
 const cloudinary            = require('cloudinary');
@@ -603,51 +603,7 @@ function isLoggedIn(req, res, next){
 };
 
 
- const apiRequest = require('requestify');
- const openweatherMap_api_key='69bdbbb6b9d5c523c30d3df90034453d';
- const google_api_key='AIzaSyBjsdFT4HpouHSdJX7fFPJg6Ym7re9ksuM';
-  const date = new Date();
-  
-const calculateTime= (latitude,longitude)=>{
-    return new Promise((resolve,reject)=>{
-     //The request to google time zone API  to get the time zone which the location is on
-                      apiRequest.get('https://maps.googleapis.com/maps/api/timezone/json?location='+latitude+','+longitude+'&timestamp=1331766000&language=es&key='+google_api_key)
-                                    .then((response)=>{
-                                            let response_body=JSON.parse(response.body);
-                                            let offset=response_body.rawOffset
-                                            let utc = date.getTime() + (date.getTimezoneOffset() * 60000);
-                                            let time = new Date(utc + (1000*offset)); 
-                                            resolve(time);
-                                    })
-                                    .catch((err)=>{
-                                             reject(err)
-                                    })
-    })
-}
-
-const getWeatherAndTime = async getWeather =>{
-   //Use of openweatherMap API to get the weather for each location.
-
-    let locations=['New York','Nairobi','10005', 'Tokyo', 'São Paulo', 'Pluto'];
-    
-        locations.forEach((each_location)=>{
-                    //Request to openweathermap api to get the current weather details for each location
-                  apiRequest.get('https://api.openweathermap.org/data/2.5/weather?APPID='+openweatherMap_api_key+'&q='+each_location)
-                    .then(async(response) =>{
-                        let gotWeather=JSON.parse(response.body);
-                        let latitude=gotWeather.coord.lat;//Location latitude coordinate
-                        let longitude=gotWeather.coord.lon;//Location longitude coordinate
-                        let time=await calculateTime(latitude,longitude)
-                        console.log('Location:',each_location,'\n', 'Weather:',gotWeather,'\nTime:',time)
-                            
-                    })
-                 .catch((err)=>{
-                     console.log(err)
-                 })
-        })
-}
-
-getWeatherAndTime();
+ 
 
 
 //imekubali

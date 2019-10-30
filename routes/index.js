@@ -22,7 +22,7 @@ const async                = require("async");
 var requestify = require('requestify');
 const nodemailer           =  require("nodemailer");
 //onst { body,validationResult } = require('express-validator/check');
-const { sanitizeBody }      = require('express-validator/filter');
+
 const cryptoRandomString    = require('crypto-random-string');
 const multer                = require('multer');
 const cloudinary            = require('cloudinary');

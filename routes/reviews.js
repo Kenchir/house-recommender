@@ -1,33 +1,11 @@
-var express                =require("express");
-var   router                =express.Router();
+const express                =require("express");
+const   router                =express.Router();
 const User                 =require("../models/user");
-const Like                 =require("../models/like");
-const Rating                =require("../models/rating");
 const House                =require("../models/house");
 const Comment              =require("../models/comments");
-const ejsLint              =require('ejs-lint');           
-const path                 =require("path");
-var  passport              =require("passport");
-var moment                 = require("moment"); 
-var middleware             = require("../middleware");
-const Joi                  = require('joi')
-var request                =require("request");
-const Upload               =require("../models/validation/upload.js");
-const NodeGeocoder         =  require('node-geocoder');
-//const register             = require('../models/validation/register.js');
-const session              = require("express-session");
-const logger               = require('../logger/logger')
-const async                = require("async");
-var requestify = require('requestify');
-const nodemailer           =  require("nodemailer");
-//onst { body,validationResult } = require('express-validator/check');
-const { sanitizeBody }      = require('express-validator/filter');
-const cryptoRandomString    = require('crypto-random-string');
-const multer                = require('multer');
-const cloudinary            = require('cloudinary');
-const cloudinaryStorage = require("multer-storage-cloudinary");
+const middleware             = require("../middleware");
 const faker                 = require('faker/locale/en');
-var randomLocation = require('random-location')
+
 
 //fake reviews
 async function reviewHouses(){
