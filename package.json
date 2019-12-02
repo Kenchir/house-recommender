@@ -4,7 +4,7 @@
   "description": "House Recommender\r all routes for the app on Route folder\r Socket.io for web socket implementation.",
   "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha"
   },
   "repository": {
     "type": "git",
@@ -32,6 +32,7 @@
     "faker": "^4.1.0",
     "http": "0.0.0",
     "joi": "^14.3.1",
+    "mocha": "^6.2.2",
     "moment": "^2.24.0",
     "mongoose": "^5.7.7",
     "multer": "^1.4.2",
