@@ -32,7 +32,7 @@
   <meta property="og:site_name" content="Creative Tim">
   <!-- Google Tag Manager -->
     
-   <script src="https://maps.googleapis.com/maps/api/jsvv=3.exp&sensor=false&libraries=places"></script>
+   <!-- <script src="https://maps.googleapis.com/maps/api/jsvv=3.exp&sensor=false&libraries=places"></script> -->
   
   <!-- End Google Tag Manager -->
   <!-- Favicon -->
@@ -47,6 +47,7 @@
   <link type="text/css" href="../../assets/css/argon.min.css?v=1.0.0" rel="stylesheet">
   <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
  <script src="../../scripts/geoMap.js"></script>
+
   <script src="../../scripts/house_view.js"></script>
        <script src="/scripts/uploadvalidator.js"></script>
  <link type="text/css" href="/index.css" rel="stylesheet">
@@ -433,7 +434,7 @@
             <div class="tab-pane fade show active" id="tabs-icons-text-1" role="tabpanel" aria-labelledby="tabs-icons-text-1-tab">
                 <div class="card-body">
                 <h6 class="heading-small text-muted mb-4">Location</h6>
-              <div id="map">   </div>
+               <div id="map-canvas"></div>
               <div id="warnings-panel"></div>
  
               <div>
@@ -648,6 +649,7 @@
   </div>
   <!-- Argon Scripts -->
   <!-- Core -->
+  
   <script src="../../assets/vendor/jquery/dist/jquery.min.js"></script>
   <script src="../../assets/vendor/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
   <!-- Optional JS -->
@@ -660,6 +662,8 @@
 
  
   <script>
+
+ 
   $(document).ready(function(){
    $('.review-text').hide();
   $('#stars li').on('mouseover', function(){
@@ -713,6 +717,8 @@
 });
 
 
+            
+                  // google.maps.event.addDomListener(window, "load", initMap);
 function responseMessage(msg) {
   $('.success-box').fadeIn(200);  
   $('.success-box div.text-message').html("<span>" + msg + "</span>");
@@ -735,15 +741,17 @@ function showDivs(n) {
   x[slideIndex-1].style.display = "block"; 
 }
 
-    </script>
+
+</script>
     <script async defer
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBjsdFT4HpouHSdJX7fFPJg6Ym7re9ksuM&callback=initMap">
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCe60oVjNK4yZ7MEPTk0Ejto6qWVgGTA54&callback=initMap">
     </script>
   </script>
     
   <noscript>
     <img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=111649226022273&ev=PageView&noscript=1" />
   </noscript>
+
 
 
 <div id="chart-tooltip" class="popover bs-popover-top" role="tooltip" style="top: 558.813px; left: 483.125px; display: none; z-index: 100;"><div class="arrow"></div><h3 class="popover-header text-center">Jul</h3><div class="popover-body d-flex align-items-center justify-content-center"><span class="badge badge-dot"><i class="bg-primary"></i></span><span class="popover-body-value">$10k</span></div></div></body></html>

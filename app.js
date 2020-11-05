@@ -156,7 +156,7 @@ app.use(reviewRoutes);
 app.use(conversationRoutes);
 app.use(reccomendRoutes);
 app.all("*", (req, res) => {
-  res.redirect("/index");
+  res.redirect("/home");
 });
 server.listen(port, () => {
   console.log(`rent-house iS rUnNiNg On PoRt ${port} `);

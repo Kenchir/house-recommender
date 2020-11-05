@@ -252,8 +252,8 @@ exports = module.exports = function(io) {
               data.lat +
               "," +
               data.lng +
-              "&location_type=APPROXIMATE" +
-              "&key=AIzaSyBjsdFT4HpouHSdJX7fFPJg6Ym7re9ksuM"
+              "&key=" +
+              "AIzaSyDFY7ohqrmKp9EpapClfcrq-MW_jM36AOU"
           )
           .then(function(response) {
             response.getBody();
@@ -264,7 +264,7 @@ exports = module.exports = function(io) {
             console.log(locname);
           })
           .catch(err => {
-            console.log(err);
+            console.log("here",err);
           });
       });
       await newpromise;

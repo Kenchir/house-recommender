@@ -423,7 +423,9 @@ async function rateHouses(){
     }
 //rateHouses();
 
-
+router.get("/home",(req,res)=>{
+    res.render("homee")
+})
 
     //renders the registtration page
 router.get("/register",(req,res)=>{
@@ -435,7 +437,7 @@ router.get("/upload",middleware.isLoggedIn,middleware.isHouseOwner,(req,res)=>{
 
 //var pictures=upload.single('image');
 router.post("/upload",middleware.isLoggedIn, upload.array('images'),async(req,res,next)=>{
-    //console.log(req.body)
+    console.log(req.body)
     //return
     if(!req.body.house_location){
         req.flash('error','The house location not given')
@@ -443,13 +445,13 @@ router.post("/upload",middleware.isLoggedIn, upload.array('images'),async(req,re
         return;
     }
    const googleMapsClient = require('@google/maps').createClient({
-                             key: 'AIzaSyBjsdFT4HpouHSdJX7fFPJg6Ym7re9ksuM'
+                             key: 'AIzaSyCe60oVjNK4yZ7MEPTk0Ejto6qWVgGTA54'
                            });
     //
          var house_loc;
          var locaddress;
          let newpromise= new Promise((resolve,reject)=>{
-              requestify.get('https://maps.googleapis.com/maps/api/geocode/json?address='+req.body.house_location+'&key=AIzaSyBjsdFT4HpouHSdJX7fFPJg6Ym7re9ksuM')
+              requestify.get('https://maps.googleapis.com/maps/api/geocode/json?address='+req.body.house_location+'&key=AIzaSyCe60oVjNK4yZ7MEPTk0Ejto6qWVgGTA54')
               .then(function(response) {
                     response.getBody();
                    // console.log(response)
@@ -465,10 +467,10 @@ router.post("/upload",middleware.isLoggedIn, upload.array('images'),async(req,re
                  })
          })
       await newpromise;
-      console.log(locaddress)
+      console.log("Address",locaddress)
         var locname;
                         let nepromise= new Promise((resolve,reject)=>{
-                             requestify.get('https://maps.googleapis.com/maps/api/geocode/json?latlng='+locaddress.lat+','+locaddress.lng+'&location_type=APPROXIMATE'+'&key=AIzaSyBjsdFT4HpouHSdJX7fFPJg6Ym7re9ksuM')
+                             requestify.get('https://maps.googleapis.com/maps/api/geocode/json?latlng='+locaddress.lat+','+locaddress.lng+'&location_type=APPROXIMATE'+'&key=AIzaSyCe60oVjNK4yZ7MEPTk0Ejto6qWVgGTA54')
                              .then(function(response) {
                                   
                                    response.getBody();
@@ -489,7 +491,7 @@ router.post("/upload",middleware.isLoggedIn, upload.array('images'),async(req,re
                 lat:locaddress.lat,
                 long:locaddress.lng
             },
-            name:locname
+            name:req.body.house_location
      }
    
    var isValid;

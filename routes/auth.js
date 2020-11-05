@@ -64,7 +64,7 @@ router.post("/login", passport.authenticate("local",{  failureFlash :"Sorry, Wro
           delete req.session.returnTo;
       }else{
            req.flash("success","Login successful!")
-           res.redirect(req.session.returnTo || '/');
+           res.redirect(req.session.returnTo || '/index');
             delete req.session.returnTo;
       }
     
@@ -144,9 +144,10 @@ router.post("/register",async(req,res,next)=>{
                                             role:isValid.value.role,
                                             email:isValid.value.email
                                            // joinedAt:moment(moment().valueOf()),
-                                             }),isValid.value.password, (err,user)=>{
+                                             }),isValid.value.password, async(err,user)=>{
                                                  
                             if(err){
+                                console.log(err.message)
                                     req.flash("error",err.message);
                                     res.redirect("register");
                             }else{
@@ -163,44 +164,11 @@ router.post("/register",async(req,res,next)=>{
                                 //      req.io.sockets.to('masterRoom').emit('new-report/admin', user)
                                 //  })
                                 if(user.role=='house-Owner'){
-                                        async.waterfall([
-                                             (done)=>{
-                                                var smtpTransport = nodemailer.createTransport({
-                                                           host: 'smtp.gmail.com',
-                                                                    port: 465,
-                                                                    secure: true,
-                                                                    auth: {
-                                                                        type: 'OAuth2',
-                                                                        user: 'kipkogeichirchir2@gmail.com',
-                                                                        clientId: '719159077041-lorf8m8a343e5lvorcb30grmuivj83gj.apps.googleusercontent.com',
-                                                                        clientSecret: 'amUTHetZ4xgJGU8TZotQYzId',
-                                                                        refreshToken: '1/ApjZeSbzzalpBvpqAcF4qUetTjZsDeI8qV2J9aEsXAI'
-                                                                     }
-                                                })
-                                            
-                                                var mailOptions = {
-                                                    to: isValid.value.email,
-                                                        from:'kipkogeichirchir2@gmail.com',
-                                                        subject:'House Recommender community',
-                                                        text:'Hello \b'+user.fname +'\b' +'\n\n' + 'Your request for house-Owner registration has been received. Kindly click the link below or paste it in browser for verification' +'\n\n'+
-                                                          'http://'+ req.headers.host +'/confirmaccount/'+ user.verifyToken +'\n\n'+
-                                                        'Welcome to House Recommender'
-                                                    };
-                                                    smtpTransport.sendMail(mailOptions,(err,info)=>{
-                                                        if(err){
-                                                            req.flash("error",err.message);
-                                                            res.redirect('back');
-                                                        }else{
-                                                            req.flash('success','Your registration was successful. A mail has been sent to your regi e-mail for verification ');
-                                                        res.redirect("/login");
-    
-                                                        }
-                                                    });
-                                            }
-                                            ],(err)=>{
-                                                    console.log(err);
-                                            }
-                                         )
+                                    user.isVerified=true;
+                                    //  user.verifyToken=undefined;
+                                      user.save();
+                                      req.flash('success','Your registration was successful, You can now login');
+                                      res.redirect("/login");
                                          
                                 }else{
                                             req.flash('success','Your registration was successful, You can now login');
