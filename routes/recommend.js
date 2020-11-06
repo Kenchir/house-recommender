@@ -451,7 +451,7 @@ async function findSimilarHouses(id){
 router.get("/index",middleware.isLoggedIn,async(req,res,next)=>{
             var houses=new Array();
         let housepromise= new Promise((resolve,reject)=>{
-                    House.find({}).limit(50)
+                    House.find({}).sort({'createdAt':1}).limit(50)
                         .then((houses)=>{
                             resolve(houses)
                         })
@@ -528,7 +528,7 @@ router.get("/index",middleware.isLoggedIn,async(req,res,next)=>{
          var all_houses= new Array();
        
                     let house_promise= new Promise((resolve,reject)=>{
-                    House.find({}).limit(50)
+                    House.find({}).sort({createdAt:1}).limit(50)
                         .then((houses)=>{
                             resolve(houses)
                         })
