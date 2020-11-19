@@ -48,7 +48,7 @@ var rootUsers = socketUsers.Users;
 //   console.log(rootUsers)
 // })
 mongoose.set("useCreateIndex", true);
-mongoose.connect("mongodb://ken:ken1234@ds117545.mlab.com:17545/housing-app", {
+mongoose.connect("mongodb://crack:hacker123@ds117545.mlab.com:17545/housing-app", {
   useNewUrlParser: true,
   useUnifiedTopology: true
 });
@@ -70,7 +70,7 @@ app.use(
       maxAge: 60 * 60 * 1000
     },
     store: new MongoStore({
-      url: "mongodb://ken:ken1234@ds117545.mlab.com:17545/housing-app"
+      url: "mongodb://crack:hacker123@ds117545.mlab.com:17545/housing-app"
     })
   })
 );
@@ -94,7 +94,7 @@ io.use(
     key: "express.sid", // the name of the cookie where express/connect stores its session_id
     secret: "house-recommender", // the session_secret to parse the cookie
     store: new MongoStore({
-      url: "mongodb://ken:ken1234@ds117545.mlab.com:17545/housing-app"
+      url: "mongodb://crack:hacker123@ds117545.mlab.com:17545/housing-app"
     }), // we NEED to use a sessionstore. no memorystore please
     success: onAuthorizeSuccess, // *optional* callback on success - read more below
     fail: onAuthorizeFail // *optional* callback on fail/error - read more below
