@@ -49,7 +49,7 @@
     "random-location": "^1.1.2",
     "request": "^2.88.0",
     "requestify": "^0.2.5",
-    "socket.io": "^2.3.0",
+    "socket.io": "^2.4.0",
     "socket.io.users": "^2.0.2",
     "topo": "^3.0.3",
     "winston": "^3.2.1"
